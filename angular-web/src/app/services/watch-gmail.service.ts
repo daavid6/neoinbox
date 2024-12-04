@@ -8,7 +8,7 @@ declare const gapi: any;
 	providedIn: 'root',
 })
 export class WatchGmailService {
-	private isGapiInitialized = false;
+	private isGapiInitialized: boolean = false;
 
 	constructor(private authService: AuthService) {
 		this.authService.accessToken$.subscribe((token) => {
@@ -21,13 +21,13 @@ export class WatchGmailService {
 	public async watchGmail() {
 		if (!this.isGapiInitialized) {
 			console.error('GAPI client not initialized');
-			return;
+			throw new Error('GAPI client not initialized');
 		}
+
 		const res = await gapi.client.gmail.users.watch({
 			userId: 'me',
 			resource: {
 				topicName: environment.googleProjectConfig.topicPath,
-				//labelIds: ['INBOX'],    // Uncomment to notify only the INBOX
 			},
 		});
 
@@ -35,9 +35,12 @@ export class WatchGmailService {
 	}
 
 	public async unWatchGmail() {
-		const gmail = gapi.client.gmail;
+		if (!this.isGapiInitialized) {
+			console.error('GAPI client not initialized');
+			throw new Error('GAPI client not initialized');
+		}
 
-		const res = await gmail.users.stop({
+		const res = await gapi.client.gmail.users.stop({
 			userId: 'me',
 			requestBody: {},
 		});
@@ -56,5 +59,9 @@ export class WatchGmailService {
 			gapi.client.setToken({ access_token: token });
 			this.isGapiInitialized = true;
 		});
+	}
+
+	public getIsGapiInitialized() {
+		return this.isGapiInitialized;
 	}
 }

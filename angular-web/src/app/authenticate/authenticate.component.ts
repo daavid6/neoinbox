@@ -17,6 +17,7 @@ export class AuthenticateComponent {
 			this.router.navigate(['/permissions']);
 		} catch (error) {
 			console.error('Login failed:', error);
+			this.router.navigate(['/authenticate']);
 		}
 	}
 }

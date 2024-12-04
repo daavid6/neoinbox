@@ -17,32 +17,35 @@ h1 {
 	line-height: 100%;
 	letter-spacing: -0.125rem;
 	margin: 0;
-	font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-		Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-		"Segoe UI Symbol";
+	font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji",
+		"Segoe UI Emoji", "Segoe UI Symbol";
 }
-
-
 
 button {
 	margin: 1rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    background-color: #ffee69;
-    color: rgb(0, 0, 0);
-    font-size: 1rem;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+	padding: 0.75rem 1.5rem;
+	border-radius: 0.5rem;
+	background-color: #ffee69;
+	color: rgb(0, 0, 0);
+	font-size: 1rem;
+	font-weight: 600;
+	border: none;
+	cursor: pointer;
+	transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-button:hover {
-    background-color: #ff85c1;
-    transform: scale(1.05);
+button:hover:not(.disabled-button) {
+	background-color: #ff85c1;
+	transform: scale(1.05);
 }
 
-button:active {
-    background-color: #ff4a8d;
-    transform: scale(0.95);
+button:active:not(.disabled-button) {
+	background-color: #ff4a8d;
+	transform: scale(0.95);
+}
+
+.disabled-button {
+	background-color: lightgray;
+	cursor: not-allowed;
 }

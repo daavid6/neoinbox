@@ -23,6 +23,7 @@ export class AuthService {
 			console.log('credential:', credential);
 		} catch (error) {
 			console.error('Login failed:', error);
+			throw error;
 		}
 	}
 }

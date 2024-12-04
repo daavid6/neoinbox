@@ -5,10 +5,20 @@
 		</div>
 
 		<div class="buttons-div">
-			<button (click)="enableWatch()" [disabled]="isWatchEnabled">
+			<button
+				(click)="enableWatch()"
+				[disabled]="isWatchEnabled"
+				[ngClass]="{ 'disabled-button': isWatchEnabled }"
+			>
 				Enable watch
 			</button>
-			<button (click)="disableWatch()">Disable watch</button>
+			<button
+				(click)="disableWatch()"
+				[disabled]="isWatchDisabled"
+				[ngClass]="{ 'disabled-button': isWatchDisabled }"
+			>
+				Disable watch
+			</button>
 		</div>
 	</div>
 </main>
