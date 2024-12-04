@@ -7,6 +7,7 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class AuthService {
 	public accessToken$ = new BehaviorSubject<string | null>(null);
+	private isloggedIn: boolean = false;
 
 	constructor(private auth: Auth) {}
 
@@ -19,11 +20,16 @@ export class AuthService {
 			const credential = GoogleAuthProvider.credentialFromResult(result);
 			const token = credential?.accessToken;
 			this.accessToken$.next(token || null);
+			this.isloggedIn = true;
 
 			console.log('credential:', credential);
 		} catch (error) {
 			console.error('Login failed:', error);
 			throw error;
 		}
+	}
+
+	public getIsLoggedIn() {
+		return this.isloggedIn;
 	}
 }

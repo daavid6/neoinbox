@@ -3,6 +3,7 @@ import { NgClass } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { WatchGmailService } from '../services/watch-gmail.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
 	selector: 'app-permissions',
@@ -16,11 +17,12 @@ export class PermissionsComponent {
 
 	constructor(
 		private watchGmailService: WatchGmailService,
+		private authenticationService: AuthService,
 		private router: Router
 	) {}
 
 	ngOnInit() {
-		if (!this.watchGmailService.getIsGapiInitialized())
+		if (!this.authenticationService.getIsLoggedIn())
 			this.router.navigate(['/authenticate']);
 	}
 

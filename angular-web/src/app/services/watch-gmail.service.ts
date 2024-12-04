@@ -60,8 +60,4 @@ export class WatchGmailService {
 			this.isGapiInitialized = true;
 		});
 	}
-
-	public getIsGapiInitialized() {
-		return this.isGapiInitialized;
-	}
 }
