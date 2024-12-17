@@ -1,29 +1,32 @@
-main {
-	width: 100%;
-	min-height: 100%;
+:host {
 	display: flex;
+	min-height: 100vh;
+	width: 100%;
+	box-sizing: border-box;
+	background: linear-gradient(220.55deg, #565656 0%, #181818 100%);
+}
+
+
+.permissions-container {
+	display: flex;
+	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	padding: 1rem;
-	box-sizing: inherit;
-	position: relative;
+	width: 100%;
 }
 
 h1 {
 	text-align: center;
-	font-size: 3.125rem;
-	color: var(--gray-900);
-	font-weight: 500;
-	line-height: 100%;
-	letter-spacing: -0.125rem;
-	margin: 0;
+	font-size: 5rem;
+	color: #f6b6d6;
+	font-weight: 1000;
+	margin-bottom: 1.5rem;
 	font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI",
-		Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji",
-		"Segoe UI Emoji", "Segoe UI Symbol";
+		Roboto;
 }
 
 button {
-	margin: 1rem;
+	margin: 0 1rem 0 1rem;
 	padding: 0.75rem 1.5rem;
 	border-radius: 0.5rem;
 	background-color: #ffee69;

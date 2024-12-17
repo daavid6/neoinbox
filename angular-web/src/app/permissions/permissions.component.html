@@ -1,24 +1,20 @@
-<main class="main">
-	<div>
-		<div>
-			<h1>TestGmail</h1>
-		</div>
+<div class="permissions-container">
+	<h1>NeoInbox</h1>
 
-		<div class="buttons-div">
-			<button
-				(click)="enableWatch()"
-				[disabled]="isWatchEnabled"
-				[ngClass]="{ 'disabled-button': isWatchEnabled }"
-			>
-				Enable watch
-			</button>
-			<button
-				(click)="disableWatch()"
-				[disabled]="isWatchDisabled"
-				[ngClass]="{ 'disabled-button': isWatchDisabled }"
-			>
-				Disable watch
-			</button>
-		</div>
+	<div class="buttons-div">
+		<button
+			(click)="enableWatch()"
+			[disabled]="isWatchEnabled"
+			[ngClass]="{ 'disabled-button': isWatchEnabled }"
+		>
+			Enable watch
+		</button>
+		<button
+			(click)="disableWatch()"
+			[disabled]="isWatchDisabled"
+			[ngClass]="{ 'disabled-button': isWatchDisabled }"
+		>
+			Disable watch
+		</button>
 	</div>
-</main>
+</div>
