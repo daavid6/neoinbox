@@ -1,6 +1,9 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Auth, signInWithPopup, GoogleAuthProvider } from '@angular/fire/auth';
-import { BehaviorSubject } from 'rxjs';
+
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
+
+import { Tokens } from '../interfaces/Tokens';
 
 @Injectable({
 	providedIn: 'root',
@@ -8,28 +11,37 @@ import { BehaviorSubject } from 'rxjs';
 export class AuthService {
 	public accessToken$ = new BehaviorSubject<string | null>(null);
 	private isloggedIn: boolean = false;
+	private endpointUrl = 'http://localhost:3000';
 
-	constructor(private auth: Auth) {}
+	constructor(private http: HttpClient) {}
 
-	public async loginWithGoogle() {
-		const provider = new GoogleAuthProvider();
-		provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
+	async initiateGoogleAuth() {
+		const response = await firstValueFrom(
+			this.http.get<{ url: string }>(
+				`${this.endpointUrl}/api/auth/google`
+			)
+		);
+		window.location.href = response.url;
+	}
 
+	async exchangeCodeForTokens(code: string): Promise<Tokens> {
 		try {
-			const result = await signInWithPopup(this.auth, provider);
-			const credential = GoogleAuthProvider.credentialFromResult(result);
-			const token = credential?.accessToken;
-			this.accessToken$.next(token || null);
-			this.isloggedIn = true;
+			const tokens = await firstValueFrom(
+				this.http.post<Tokens>(`${this.endpointUrl}/api/auth/token`, {
+					code,
+				})
+			);
 
-			console.log('credential:', credential);
+			this.accessToken$.next(tokens.access_token);
+			this.isloggedIn = true;
+			return tokens;
 		} catch (error) {
-			console.error('Login failed:', error);
+			console.error('Error exchanging code for tokens:', error);
 			throw error;
 		}
 	}
 
-	public getIsLoggedIn() {
+	public getIsLoggedIn(): boolean {
 		return this.isloggedIn;
 	}
 }

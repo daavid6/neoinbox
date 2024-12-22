@@ -13,8 +13,7 @@ export class AuthenticateComponent {
 
 	public async login() {
 		try {
-			await this.authService.loginWithGoogle();
-			this.router.navigate(['/permissions']);
+			await this.authService.initiateGoogleAuth();
 		} catch (error) {
 			console.error('Login failed:', error);
 			this.router.navigate(['/authenticate']);
