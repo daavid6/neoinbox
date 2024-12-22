@@ -1,0 +1,39 @@
+{
+	"name": "testgmail",
+	"version": "1.0.0",
+	"description": "Test of the Gmail API and Pub/Sub messaging",
+	"main": "app.js",
+	"type": "module",
+	"scripts": {
+		"start": "node app/server.js",
+		"dev": "nodemon app/server.js",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/daavid6/testGmail.git"
+	},
+	"keywords": [
+		"Gmail",
+		"API",
+		"Pub/Sub",
+		"Test"
+	],
+	"author": "David Ruiz",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/daavid6/testGmail/issues"
+	},
+	"homepage": "https://github.com/daavid6/testGmail#readme",
+	"dependencies": {
+		"@google-cloud/pubsub": "^4.8.0",
+		"cors": "^2.8.5",
+		"dotenv": "^16.4.5",
+		"googleapis": "^144.0.0",
+		"nodemon": "^3.1.9",
+		"open": "^10.1.0"
+	},
+	"devDependencies": {
+		"express": "^4.21.2"
+	}
+}
