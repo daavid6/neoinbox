@@ -43,7 +43,11 @@ function formatUserData(userId, token) {
     return {
         userId,
         userData: {
-            historyId: '000000',
+			watch: {
+            	historyId: '',
+				expiration: Timestamp.fromMillis(Date.now()),
+				enabled: false,
+			},
             tokens: {
                 access_token: token.access_token,
                 refresh_token: token.refresh_token,
@@ -90,7 +94,7 @@ export async function validateCode(code) {
         const token = await exchangeCodeForToken(code);
         const { userId, userData } = await getUserData(token);
         await saveUserData(userId, userData);
-        return token;
+        return {token, userId};
     } catch (error) {
         console.error('Error in validateCode:', error);
         throw error;

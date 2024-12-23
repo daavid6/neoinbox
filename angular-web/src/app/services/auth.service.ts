@@ -10,6 +10,8 @@ import { Tokens } from '../interfaces/Tokens';
 })
 export class AuthService {
 	public accessToken$ = new BehaviorSubject<string | null>(null);
+
+	private currentUserId: string | null = null;
 	private isloggedIn: boolean = false;
 	private endpointUrl = 'http://localhost:3000';
 
@@ -26,15 +28,17 @@ export class AuthService {
 
 	async exchangeCodeForTokens(code: string): Promise<Tokens> {
 		try {
-			const tokens = await firstValueFrom(
-				this.http.post<Tokens>(`${this.endpointUrl}/api/auth/token`, {
-					code,
-				})
+			const response = await firstValueFrom(
+				this.http.post<{ token: Tokens; userId: string }>(
+					`${this.endpointUrl}/api/auth/token`,
+					{ code }
+				)
 			);
 
-			this.accessToken$.next(tokens.access_token);
+			this.currentUserId = response.userId;
+			this.accessToken$.next(response.token.access_token);
 			this.isloggedIn = true;
-			return tokens;
+			return response.token;
 		} catch (error) {
 			console.error('Error exchanging code for tokens:', error);
 			throw error;
@@ -43,5 +47,9 @@ export class AuthService {
 
 	public getIsLoggedIn(): boolean {
 		return this.isloggedIn;
+	}
+
+	public getCurrentUserId(): string | null {
+		return this.currentUserId;
 	}
 }
