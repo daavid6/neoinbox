@@ -22,7 +22,7 @@ export class AuthCallbackComponent implements OnInit {
 					await this.authService.exchangeCodeForTokens(
 						params['code']
 					);
-					this.router.navigate(['/permissions']);
+					this.router.navigate(['/watch-control']);
 				} catch (error) {
 					console.error('Error exchanging code for tokens:', error);
 					this.router.navigate(['/authenticate']);

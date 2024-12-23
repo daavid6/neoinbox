@@ -6,12 +6,12 @@ import { WatchGmailService } from '../services/watch-gmail.service';
 import { AuthService } from '../services/auth.service';
 
 @Component({
-	selector: 'app-permissions',
+	selector: 'app-watch-control',
 	imports: [NgClass],
-	templateUrl: './permissions.component.html',
-	styleUrl: './permissions.component.css',
+	templateUrl: './watch-control.component.html',
+	styleUrl: './watch-control.component.css',
 })
-export class PermissionsComponent {
+export class WatchControlComponent {
 	public isWatchEnabled: boolean = false;
 	public isWatchDisabled: boolean = false;
 
