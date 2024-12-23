@@ -1,7 +1,8 @@
 import express from 'express';
 import { google } from 'googleapis';
-import { getNewToken, getNewTokenByCode } from './manager/oauth2/authorize.js';
-import oAuthClientCredentials from '../app/private/service_accounts/gmail-watch-client-oauth.json' with { type: "json" };
+
+import { validateCode } from './manager/oauth2/authorize.js';
+import oAuthClientCredentials from './private/service_accounts/gmail-watch-client-oauth.json' with { type: "json" };
 
 const router = express.Router();
 export default router;
@@ -16,10 +17,11 @@ router.get('/auth/google', (req, res) => {
 
 	const authUrl = oAuth2Client.generateAuthUrl({
 		access_type: 'offline',
+		prompt: 'consent',  // force the consent window
 		scope: [
 			'https://www.googleapis.com/auth/gmail.readonly',
 			'https://www.googleapis.com/auth/userinfo.email',
-		]
+		],
 	});
 
 	res.json({ url: authUrl });
@@ -28,7 +30,7 @@ router.get('/auth/google', (req, res) => {
 router.post('/auth/token', async (req, res) => {
 	const { code } = req.body;
 	try {
-		const tokens = await getNewTokenByCode(code);
+		const tokens = await validateCode(code);
 		res.json(tokens);
 	} catch (error) {
 		res.status(400).json({ error: error.message });

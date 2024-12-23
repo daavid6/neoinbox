@@ -1,92 +1,100 @@
 import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
+import { Timestamp } from 'firebase-admin/firestore';
 
 import fs from 'fs';
 import path from 'path'
-import readline from 'readline';
-import open from 'open'; //To open the link to authoritation
 import dotenv from 'dotenv';
 dotenv.config({path: '../../../.env'});
 
+import { createDocument, existsDoc, updateDocument } from '../firestore/crud.js'
+import { firebaseAuth } from '../firestore/firebase.js';
+
 import oAuthClientCredentials from '../../private/service_accounts/gmail-watch-client-oauth.json' with { type: "json" };
-const OAUTH_CREDENTIAL_DIR = './app/private/watch-token';
 
-/**
- * Generates a new OAuth2 token for the given OAuth2 client.
- * 
- * This function generates an authorization URL, opens it in the default browser,
- * and prompts the user to enter the authorization code from the browser. It then
- * exchanges the authorization code for an access token and saves it to a file.
- * 
- * @param {OAuth2Client} oAuth2Client - The OAuth2 client to get the token for.
- * @returns {Promise<OAuth2Client>} A promise that resolves with the OAuth2 client
- *                                  with the new token set.
- * @throws Will throw an error if there is an issue retrieving the access token.
- */
-export function getNewToken() {
-  const { client_secret, client_id, redirect_uris } = oAuthClientCredentials.web;
-  const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+const { client_secret, client_id, redirect_uris } = oAuthClientCredentials.web;
+const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[1]);
 
-  const authUrl = oAuth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: [
-	  	'https://www.googleapis.com/auth/gmail.readonly', 
-      	'https://www.googleapis.com/auth/userinfo.email',
-    ]
-  })
 
-  open(authUrl);
+async function exchangeCodeForToken(code) {
+    return new Promise((resolve, reject) => {
+        const decodedCode = decodeURIComponent(code);
 
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve, reject) => {
-    rl.question('Enter the code from that page here: ', (code) => {
-      rl.close();
-      const decodedCode = decodeURIComponent(code);
-      oAuth2Client.getToken(decodedCode, async (err, token) => {
-        if (err) {
-          console.error('Error retrieving access token', err);
-          reject(err);
-        } else {
-          oAuth2Client.setCredentials(token);
-          const userInfo = await getUserInfo(oAuth2Client);
-          const userEmail = userInfo.email; // We could better use the id. I keep the email to simplify debugging process
-          const userTokenPath = path.join(OAUTH_CREDENTIAL_DIR, `${userEmail}_token.json`);
-          fs.writeFileSync(userTokenPath, JSON.stringify(token));
-          resolve(oAuth2Client);
-        }
-      });
+        oAuth2Client.getToken(decodedCode, (err, token) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            oAuth2Client.setCredentials(token);
+            resolve(token);
+        });
     });
-  });
 }
 
-export function getNewTokenByCode(code) {
-	const { client_secret, client_id, redirect_uris } = oAuthClientCredentials.web;
-	const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[1]);
-	const decodedCode = decodeURIComponent(code);
-
-return new Promise((resolve, reject) => {
-    oAuth2Client.getToken(decodedCode, async (err, token) => {
-      if (err) {
-        console.error('Error retrieving access token', err);
-        reject(err);
-      } else {
-        try {
-          oAuth2Client.setCredentials(token);
-          const userInfo = await getUserInfo(oAuth2Client);
-          const userEmail = userInfo.email;
-          const userTokenPath = path.join(OAUTH_CREDENTIAL_DIR, `${userEmail}_token.json`);
-          fs.writeFileSync(userTokenPath, JSON.stringify(token));
-          resolve(token); // Return the token instead of oAuth2Client
-        } catch (error) {
-          reject(error);
-        }
-      }
-    });
+async function getUserInfo(oAuth2Client) {
+  const oauth2 = google.oauth2({
+    auth: oAuth2Client,
+    version: 'v2',
   });
+  const res = await oauth2.userinfo.get();
+  return res.data;
+}
+
+function formatUserData(userId, token) {
+    return {
+        userId,
+        userData: {
+            historyId: '000000',
+            tokens: {
+                access_token: token.access_token,
+                refresh_token: token.refresh_token,
+                expiry_date: Timestamp.fromMillis(token.expiry_date),
+                id_token: token.id_token,
+                scope: token.scope,
+                token_type: token.token_type,
+            }
+        }
+    };
+}
+
+async function getUserData(token) {
+    const userInfo = await getUserInfo(oAuth2Client);
+
+    try {
+        const userRecord = await firebaseAuth.getUserByEmail(userInfo.email);
+        return formatUserData(userRecord.uid, token);
+    } catch (error) {
+        if (error.code === 'auth/user-not-found') {
+            const newUser = await firebaseAuth.createUser({
+                email: userInfo.email,
+                displayName: userInfo.name,
+                photoURL: userInfo.picture
+            });
+
+            return formatUserData(newUser.uid, token);
+        }
+
+        throw error;
+    }
+}
+
+async function saveUserData(userId, userData) {
+    if (existsDoc('users', userId)) {
+		await createDocument('users', userId, userData);
+    } else {
+        await updateDocument('users', userId, userData);
+	}
+}
+
+export async function validateCode(code) {
+    try {
+        const token = await exchangeCodeForToken(code);
+        const { userId, userData } = await getUserData(token);
+        await saveUserData(userId, userData);
+        return token;
+    } catch (error) {
+        console.error('Error in validateCode:', error);
+        throw error;
+    }
 }
 
 
@@ -120,19 +128,4 @@ const userEmail = userInfo.email; // We could better use the id. I keep the emai
 
   return oAuth2Client;
 
-}
-
-/**
- * Retrieves the user's profile information.
- * 
- * @param {OAuth2Client} oAuth2Client - The OAuth2 client with the user's credentials.
- * @returns {Promise<Object>} A promise that resolves with the user's profile information.
- */
-export async function getUserInfo(oAuth2Client) {
-  const oauth2 = google.oauth2({
-    auth: oAuth2Client,
-    version: 'v2',
-  });
-  const res = await oauth2.userinfo.get();
-  return res.data;
 }
