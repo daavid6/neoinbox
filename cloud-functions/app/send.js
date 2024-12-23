@@ -1,17 +1,16 @@
-import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' });
-process.noDeprecation = true;
-
 import { PubSub } from '@google-cloud/pubsub';
+
 import { projectName } from './constants/project.js';
+import { environment } from './private/enviroment.js';
+process.noDeprecation = true;
 
 const pubsub = new PubSub({
 	projectId: projectName,
-	keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+	keyFilename: './private/service_accounts/pub-sub-publisher.json',
 });
 
 async function publishTestMessage() {
-	const topic = pubsub.topic('temazo');
+	const topic = pubsub.topic(environment.googleProjectConfig.topicName);
 
 	try {
 		const [messageId] = await topic.publishMessage({ data: Buffer.from('Test message!') });
