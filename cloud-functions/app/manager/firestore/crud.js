@@ -60,8 +60,22 @@ export async function deleteDocument(collection, docId) {
 }
 
 export async function existsDoc(collection, docId) {
-    const docRef = db.collection(collection).doc(docId);
-    const doc = await docRef.get();
-    
-    return doc.exists;
+	const docRef = db.collection(collection).doc(docId);
+	const doc = await docRef.get();
+
+	return doc.exists;
+}
+
+export async function checkExpiringWatches() {
+	const docIds = [];
+	const nearExpiration = new Date(Date.now() + 1000000000);
+
+	const snapshot = await db.collection('users').where('watch.expiration', '<=', nearExpiration).where('watch.enabled', '==', true).get();
+
+	snapshot.forEach((doc) => {
+		docIds.push(doc.id);
+	});
+
+	console.log(docIds);
+	return docIds;
 }

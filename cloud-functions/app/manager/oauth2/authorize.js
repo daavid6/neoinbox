@@ -1,8 +1,6 @@
 import { google } from 'googleapis';
 import { Timestamp } from 'firebase-admin/firestore';
 
-import fs from 'fs';
-import path from 'path'
 import dotenv from 'dotenv';
 dotenv.config({path: '../../../.env'});
 
@@ -99,37 +97,4 @@ export async function validateCode(code) {
         console.error('Error in validateCode:', error);
         throw error;
     }
-}
-
-
-export async function refreshToken() {
-	const { client_secret, client_id, redirect_uris } = oAuthClientCredentials.web;
-  const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
-
-  const userId = oAuth2Client._clientId
-const userInfo = await getUserInfo(oAuth2Client);
-const userEmail = userInfo.email; // We could better use the id. I keep the email to simplify debugging process
-	const userTokenPath = path.join(OAUTH_CREDENTIAL_DIR, `${userEmail}_token.json`);
-	const tokenStoragePath = path.join(OAUTH_CREDENTIAL_DIR, userTokenPath)
-
-  // Check if we have previously stored a token.
-  if (!fs.existsSync(tokenStoragePath)) return null
-
-  const token = JSON.parse(fs.readFileSync(tokenStoragePath));
-  oAuth2Client.setCredentials(token);
-
-  if (oAuth2Client.isTokenExpiring()) {
-    try {
-      const newToken = await oAuth2Client.refreshAccessToken();
-      oAuth2Client.setCredentials(newToken.credentials);
-      fs.writeFileSync(tokenStoragePath, JSON.stringify(newToken.credentials));
-      console.log('Token refreshed and stored to', tokenStoragePath);
-    } catch (err) {
-      console.error('Error refreshing access token', err);
-      return null
-    }
-  }
-
-  return oAuth2Client;
-
 }
