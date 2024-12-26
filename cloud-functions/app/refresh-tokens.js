@@ -1,3 +1,8 @@
 import { checkExpiringWatches } from './manager/firestore/crud.js';
 
-checkExpiringWatches();
+const ids = await checkExpiringWatches();
+
+ids.forEach(id => {
+	id
+	;
+});
