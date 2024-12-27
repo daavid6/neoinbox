@@ -46,6 +46,23 @@ export async function updateDocument(collection, docId, data) {
 	}
 }
 
+export async function batchUpdateDocuments(collection, updates) {
+	try {
+		const batch = db.batch();
+
+		updates.forEach(({ docId, data }) => {
+			const docRef = db.collection(collection).doc(docId);
+			batch.update(docRef, data);
+		});
+
+		await batch.commit();
+		return updates.length;
+	} catch (error) {
+		console.error('Error in batch update:', error);
+		throw error;
+	}
+}
+
 export async function deleteDocument(collection, docId) {
 	try {
 		const docRef = db.collection(collection).doc(docId);
