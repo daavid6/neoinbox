@@ -25,10 +25,10 @@ export async function readDocument(collection, docId) {
 		if (!doc.exists) {
 			console.log('No such document!');
 			return null;
-		} else {
-			console.log('Document data:', doc.data());
-			return doc.data();
 		}
+		
+		console.log('Document data:', doc.data());
+		return doc.data();
 	} catch (error) {
 		console.error('Error getting document: ', error);
 		throw error;
@@ -36,8 +36,6 @@ export async function readDocument(collection, docId) {
 }
 
 export async function updateDocument(collection, docId, data) {
-	console.log('Entro updateDocument');
-
 	try {
 		const docRef = db.collection(collection).doc(docId);
 		await docRef.update(data);
@@ -68,14 +66,14 @@ export async function existsDoc(collection, docId) {
 
 export async function checkExpiringWatches() {
 	const queryInfo = [];
-	const nearExpiration = new Date(Date.now() + 1000 * 60 * 60 * 24 * 10); // 2 remaining days
+	const nearExpiration = new Date(Date.now() + 1000 * 60 * 60 * 24 * 1);
 
-	const snapshot = await db.collection('users').select('tokens.refresh_token').where('watch.expiration', '<=', nearExpiration).where('watch.enabled', '==', true).get();
+	const snapshot = await db.collection('users').select('refresh_token').where('watch.expiration', '<=', nearExpiration).where('watch.enabled', '==', true).get();
 
 	snapshot.forEach((doc) => {
 		queryInfo.push({
 			id: doc.id,
-			refresh_token: doc.data().tokens.refresh_token,
+			refresh_token: doc.data().refresh_token,
 		});
 	});
 
