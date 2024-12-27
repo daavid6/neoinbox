@@ -1,12 +1,11 @@
 import { PubSub } from '@google-cloud/pubsub';
 
-import { projectName } from './constants/project.js';
-import { environment } from './private/enviroment.js';
+import { environment } from '../../../private/enviroment.js';
 process.noDeprecation = true;
 
 const pubsub = new PubSub({
-	projectId: projectName,
-	keyFilename: './private/service_accounts/pub-sub-publisher.json',
+	projectId: environment.googleProjectConfig.projectName,
+	keyFilename: '../../../private/service_accounts/pub-sub-publisher.json',
 });
 
 async function publishTestMessage() {
