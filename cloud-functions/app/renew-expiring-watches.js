@@ -1,28 +1,18 @@
-import { Timestamp } from 'firebase-admin/firestore';
-
-import { checkExpiringWatches } from './manager/firestore/crud.js';
+import { batchUpdateDocuments, checkExpiringWatches } from './manager/firestore/crud.js';
 import { refreshAllTokens } from './manager/oauth2/authorize.js';
-import { renewWatches } from './manager/gmail/call-watch.js';
-import { updateDocument } from './manager/firestore/crud.js';
+import { renewWatches as renewAllWatches } from './manager/gmail/call-watch.js';
 
-async function main() {
+async function renewExpiringWatches() {
 	try {
 		const ids = await checkExpiringWatches();
 		const clients = await refreshAllTokens(ids);
-		const results = await renewWatches(clients);
+		const updates = await renewAllWatches(clients);
+		const updated = await batchUpdateDocuments('users', updates);
 
-		const updatePromises = results.map(({ userId, historyId, expiration }) =>
-			updateDocument('users', userId, {
-				'watch.historyId': historyId,
-				'watch.expiration': Timestamp.fromMillis(expiration),
-			})
-		);
-
-		await Promise.all(updatePromises);
-		console.log('Successfully updated watch data for', results.length, 'users');
+		console.log('Successfully updated watch data for', updated, 'users');
 	} catch (error) {
 		console.error('Error in renew-watches:', error);
 	}
 }
 
-main();
+renewExpiringWatches();

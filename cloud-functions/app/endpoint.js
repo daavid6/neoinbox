@@ -4,12 +4,14 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 import { readDocument, updateDocument } from './manager/firestore/crud.js';
 import { validateCode } from './manager/oauth2/authorize.js';
+import { renewExpiringWatches } from './renew-expiring-watches.js'
+
 import oAuthClientCredentials from './private/service_accounts/gmail-watch-client-oauth.json' with { type: "json" };
 
 const router = express.Router();
 export default router;
 
-router.get('/auth/google', (req, res) => {
+router.get('/auth/google', (_req, res) => {
 	const { client_secret, client_id, redirect_uris } = oAuthClientCredentials.web;
 	const oAuth2Client = new google.auth.OAuth2(
 		client_id,
@@ -72,6 +74,16 @@ router.post('/watch/disable', async (req, res) => {
         res.status(200).json({ message: 'Watch disabled' });
     } catch (error) {
         console.error('Error updating watch data:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/watch/renew', async (_req, res) => {   
+    try {        
+        await renewExpiringWatches();
+        res.status(200).json({ message: 'Watch renew' });
+    } catch (error) {
+        console.error('Error renewing watch data:', error);
         res.status(500).json({ error: error.message });
     }
 });

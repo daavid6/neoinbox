@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import { Timestamp } from 'firebase-admin/firestore';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -39,20 +40,28 @@ export async function renewWatches(clients) {
 		const watchPromises = clients.map(async ({ userId, oAuth2Client }) => {
 			try {
 				const { historyId, expiration } = await watchGmail(oAuth2Client);
-				return { userId, historyId, expiration, success: true };
+				return {
+					docId: userId,
+					data: {
+						'watch.historyId': historyId,
+						'watch.expiration': Timestamp.fromMillis(expiration),
+						'watch.enabled': true,
+					},
+					success: true,
+				};
 			} catch (error) {
 				console.error(`Failed to renew watch for user: ${userId}`, error);
-				return { userId, success: false, error };
+				return { docId: userId, success: false, error };
 			}
 		});
 
 		const results = await Promise.all(watchPromises);
-		console.log(`Renewed ${results.filter((r) => r.success).length} watches`);
+		const successfulResults = results.filter((r) => r.success);
 
-		return results.filter((r) => r.success);
+		// Return only the successful updates in the format needed for batchUpdateDocuments
+		return successfulResults.map(({ docId, data }) => ({ docId, data }));
 	} catch (error) {
 		console.error('Error in renewWatches:', error);
 		throw error;
 	}
 }
-
