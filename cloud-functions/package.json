@@ -1,36 +1,39 @@
 {
-	"name": "testgmail",
+	"name": "neoinbox-cloud-functions",
 	"version": "1.0.0",
-	"description": "Test of the Gmail API and Pub/Sub messaging",
-	"main": "app.js",
+	"description": "",
+	"main": "index.js",
 	"type": "module",
 	"scripts": {
-		"start": "node app/server.js",
-		"dev": "nodemon app/server.js",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"deploy:renew": "gcloud functions deploy watch-renew --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=watchRenew --trigger-http --allow-unauthenticated",
+		"deploy:enable": "gcloud functions deploy watch-enable --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=watchEnable --trigger-http --allow-unauthenticated",
+		"deploy:disable": "gcloud functions deploy watch-disable --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=watchDisable --trigger-http --allow-unauthenticated",
+		"deploy:all": "npm run deploy:renew && npm run deploy:enable && npm run deploy:disable"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/daavid6/testGmail.git"
+		"url": "git+https://github.com/daavid6/neoinbox.git"
 	},
 	"keywords": [
 		"Gmail",
 		"API",
 		"Pub/Sub",
-		"Test"
+		"AI"
 	],
 	"author": "David Ruiz",
 	"license": "ISC",
 	"bugs": {
-		"url": "https://github.com/daavid6/testGmail/issues"
+		"url": "https://github.com/daavid6/neoinbox/issues"
 	},
-	"homepage": "https://github.com/daavid6/testGmail#readme",
+	"homepage": "https://github.com/daavid6/neoinbox#readme",
 	"dependencies": {
+		"@google-cloud/functions-framework": "^3.4.4",
 		"@google-cloud/pubsub": "^4.8.0",
 		"cors": "^2.8.5",
 		"dotenv": "^16.4.5",
 		"firebase-admin": "^13.0.2",
 		"googleapis": "^144.0.0",
+		"http-status-codes": "^2.3.0",
 		"nodemon": "^3.1.9",
 		"open": "^10.1.0"
 	},

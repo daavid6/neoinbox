@@ -1,8 +1,8 @@
 import { batchUpdateDocuments, checkExpiringWatches } from './manager/firestore/crud.js';
 import { refreshAllTokens } from './manager/oauth2/authorize.js';
-import { renewWatches as renewAllWatches } from './manager/gmail/call-watch.js';
+import { renewAllWatches } from './manager/gmail/call-watch.js';
 
-async function renewExpiringWatches() {
+export async function renewExpiringWatches() {
 	try {
 		const ids = await checkExpiringWatches();
 		const clients = await refreshAllTokens(ids);
@@ -14,5 +14,3 @@ async function renewExpiringWatches() {
 		console.error('Error in renew-watches:', error);
 	}
 }
-
-renewExpiringWatches();

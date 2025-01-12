@@ -35,7 +35,7 @@ async function unWatchGmail(oAuth2Client) {
 	}
 }
 
-export async function renewWatches(clients) {
+export async function renewAllWatches(clients) {
 	try {
 		const watchPromises = clients.map(async ({ userId, oAuth2Client }) => {
 			try {

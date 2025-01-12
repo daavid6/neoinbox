@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { Timestamp } from 'firebase-admin/firestore';
+import { createRequire } from 'module';
 
 import dotenv from 'dotenv';
 dotenv.config({path: '../../../.env'});
@@ -7,11 +8,11 @@ dotenv.config({path: '../../../.env'});
 import { createDocument, existsDoc, updateDocument } from '../firestore/crud.js'
 import { firebaseAuth } from '../firestore/firebase.js';
 
-import oAuthClientCredentials from '../../private/service_accounts/gmail-watch-client-oauth.json' with { type: "json" };
+const require = createRequire(import.meta.url);
+const oAuthClientCredentials = require('../../private/service_accounts/gmail-watch-client-oauth.json');
 
 const { client_secret, client_id, redirect_uris } = oAuthClientCredentials.web;
 const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[1]);
-
 
 async function exchangeCodeForToken(code) {
     return new Promise((resolve, reject) => {
