@@ -28,20 +28,24 @@ export class WatchControlComponent {
 
 	public async enableWatch() {
 		try {
-			await this.watchGmailService.watchGmail();
 			this.isWatchEnabled = true;
 			this.isWatchDisabled = false;
+			await this.watchGmailService.watchGmail();
 		} catch (error) {
+			this.isWatchEnabled = false;
+			this.isWatchDisabled = true;
 			console.error('Error while enabling watch gmail:', error);
 		}
 	}
 
 	public async disableWatch() {
 		try {
-			await this.watchGmailService.unWatchGmail();
 			this.isWatchEnabled = false;
 			this.isWatchDisabled = true;
+			await this.watchGmailService.unWatchGmail();
 		} catch (error) {
+			this.isWatchEnabled = true;
+			this.isWatchDisabled = false;
 			console.error('Error while disabling watch gmail:', error);
 		}
 	}
