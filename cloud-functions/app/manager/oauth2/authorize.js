@@ -2,9 +2,6 @@ import { google } from 'googleapis';
 import { Timestamp } from 'firebase-admin/firestore';
 import { createRequire } from 'module';
 
-import dotenv from 'dotenv';
-dotenv.config({path: '../../../.env'});
-
 import { createDocument, existsDoc, updateDocument } from '../firestore/crud.js'
 import { firebaseAuth } from '../firestore/firebase.js';
 

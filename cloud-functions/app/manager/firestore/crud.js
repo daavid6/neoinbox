@@ -83,7 +83,7 @@ export async function existsDoc(collection, docId) {
 
 export async function checkExpiringWatches() {
 	const queryInfo = [];
-	const nearExpiration = new Date(Date.now() + 1000 * 60 * 60 * 24 * 1);
+	const nearExpiration = new Date(Date.now() + 1000 * 60 * 60 * 24 * 8);
 
 	const snapshot = await db.collection('users').select('refresh_token').where('watch.expiration', '<=', nearExpiration).where('watch.enabled', '==', true).get();
 

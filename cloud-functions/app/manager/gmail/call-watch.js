@@ -1,9 +1,6 @@
 import { google } from 'googleapis';
 import { Timestamp } from 'firebase-admin/firestore';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 import { environment } from '../../private/enviroment.js';
 
 async function watchGmail(oAuth2Client) {
@@ -19,19 +16,6 @@ async function watchGmail(oAuth2Client) {
 		return res.data; // { historyId, expiration }
 	} catch (error) {
 		console.error('Error setting up Gmail watch:', error);
-	}
-}
-
-async function unWatchGmail(oAuth2Client) {
-	try {
-		const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
-		const res = await gmail.users.stop({
-			userId: 'me',
-			requestBody: {},
-		});
-		console.log('Response:', res.data);
-	} catch (error) {
-		console.error('Error stopping Gmail watch:', error);
 	}
 }
 

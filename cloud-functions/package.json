@@ -30,16 +30,8 @@
 	"homepage": "https://github.com/daavid6/neoinbox#readme",
 	"dependencies": {
 		"@google-cloud/functions-framework": "^3.4.4",
-		"@google-cloud/pubsub": "^4.8.0",
-		"cors": "^2.8.5",
-		"dotenv": "^16.4.5",
 		"firebase-admin": "^13.0.2",
 		"googleapis": "^144.0.0",
-		"http-status-codes": "^2.3.0",
-		"nodemon": "^3.1.9",
-		"open": "^10.1.0"
-	},
-	"devDependencies": {
-		"express": "^4.21.2"
+		"http-status-codes": "^2.3.0"
 	}
 }
