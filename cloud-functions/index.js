@@ -4,7 +4,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { google } from 'googleapis';
 
 import { readDocument, updateDocument } from './app/manager/firestore/crud.js';
-import { renewExpiringWatches } from './app/renew-expiring-watches.js';
+import { renewExpiringWatches } from './app/manager/gmail/renew-expiring-watches.js';
 import { validateCode } from './app/manager/oauth2/authorize.js';
 
 import oAuthClientCredentials from './app/private/service_accounts/gmail-watch-client-oauth.json' with { type: "json" };

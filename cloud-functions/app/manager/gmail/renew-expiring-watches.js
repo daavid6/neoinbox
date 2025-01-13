@@ -1,6 +1,6 @@
-import { batchUpdateDocuments, checkExpiringWatches } from './manager/firestore/crud.js';
-import { refreshAllTokens } from './manager/oauth2/authorize.js';
-import { renewAllWatches } from './manager/gmail/call-watch.js';
+import { batchUpdateDocuments, checkExpiringWatches } from '../firestore/crud.js';
+import { refreshAllTokens } from '../oauth2/authorize.js';
+import { renewAllWatches } from './call-watch.js';
 
 export async function renewExpiringWatches() {
 	try {
