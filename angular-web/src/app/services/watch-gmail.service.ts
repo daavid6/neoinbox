@@ -13,7 +13,6 @@ declare const gapi: any;
 })
 export class WatchGmailService {
 	private isGapiInitialized: boolean = false;
-	private endpointUrl = 'http://localhost:3000';
 
 	constructor(private authService: AuthService, private http: HttpClient) {
 		this.authService.accessToken$.subscribe((token) => {
@@ -79,7 +78,7 @@ export class WatchGmailService {
 		if (beingEnable) {
 			oldHistoryId = await firstValueFrom(
 				this.http.post<string>(
-					`${this.endpointUrl}/api/watch/enable`,
+					`https://europe-west2-neoinbox.cloudfunctions.net/watch-enable`,
 					{
 						historyId,
 						expiration,
@@ -89,9 +88,12 @@ export class WatchGmailService {
 			);
 		} else {
 			await firstValueFrom(
-				this.http.post(`${this.endpointUrl}/api/watch/disable`, {
-					userId,
-				})
+				this.http.post(
+					'https://europe-west2-neoinbox.cloudfunctions.net/watch-disable',
+					{
+						userId,
+					}
+				)
 			);
 		}
 

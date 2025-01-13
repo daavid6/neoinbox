@@ -13,14 +13,13 @@ export class AuthService {
 
 	private currentUserId: string | null = null;
 	private isloggedIn: boolean = false;
-	private endpointUrl = 'http://localhost:3000';
 
 	constructor(private http: HttpClient) {}
 
 	async initiateGoogleAuth() {
 		const response = await firstValueFrom(
 			this.http.get<{ url: string }>(
-				`${this.endpointUrl}/api/auth/google`
+				'https://europe-west2-neoinbox.cloudfunctions.net/auth-google'
 			)
 		);
 		window.location.href = response.url;
@@ -30,7 +29,7 @@ export class AuthService {
 		try {
 			const response = await firstValueFrom(
 				this.http.post<{ token: Tokens; userId: string }>(
-					`${this.endpointUrl}/api/auth/token`,
+					'https://europe-west2-neoinbox.cloudfunctions.net/auth-token',
 					{ code }
 				)
 			);
