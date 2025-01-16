@@ -5,7 +5,10 @@ import { google } from 'googleapis';
 
 import { readDocument, updateDocument } from './app/manager/firestore/crud.js';
 import { renewExpiringWatches } from './app/manager/gmail/renew-expiring-watches.js';
-import { validateCode } from './app/manager/oauth2/authorize.js';
+import { validateCode, getOAuthClientOf } from './app/manager/oauth2/authorize.js';
+import { firebaseAuth } from './app/manager/firestore/firebase.js';
+import { getHistoryListSince } from './app/manager/gmail/list/list.js';
+
 
 import oAuthClientCredentials from './app/private/service_accounts/gmail-watch-client-oauth.json' with { type: "json" };
 
@@ -141,8 +144,38 @@ export const authToken = async (req, res) => {
 	}
 };
 
+export const newMessage = async (pubSubEvent, _context) => {
+    try {
+        const message = JSON.parse(Buffer.from(pubSubEvent.data.message.data, 'base64').toString());
+        const { emailAddress, historyId } = message;
+
+        if (!emailAddress || !historyId) {
+            throw new Error('Missing required fields: emailAddress and historyId');
+        }
+
+		const userRecord = await firebaseAuth.getUserByEmail(emailAddress);
+		const oAuth2Client = await getOAuthClientOf(userRecord.uid);
+		const docData = await readDocument('users', userRecord.uid);
+
+		const [_updatedDoc, messages] = await Promise.all([
+            updateDocument('users', userRecord.uid, {
+                'watch.historyId': historyId,
+            }),
+            getHistoryListSince(oAuth2Client, docData.watch.historyId)
+        ]);
+
+        console.log(`Successfully processed messages for ${emailAddress}`);
+        return { messages };
+
+    } catch (error) {
+        console.error('Error processing Pub/Sub message:', error);
+        throw error;
+    }
+};
+
 functions.http('watchRenew', watchRenew);
 functions.http('watchEnable', watchEnable);
 functions.http('watchDisable', watchDisable);
 functions.http('authGoogle', authGoogle);
 functions.http('authToken', authToken);
+functions.cloudEvent('newMessage', newMessage);

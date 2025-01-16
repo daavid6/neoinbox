@@ -2,7 +2,7 @@ import { google } from 'googleapis';
 import { Timestamp } from 'firebase-admin/firestore';
 import { createRequire } from 'module';
 
-import { createDocument, existsDoc, updateDocument } from '../firestore/crud.js'
+import { createDocument, existsDoc, updateDocument, readDocument } from '../firestore/crud.js';
 import { firebaseAuth } from '../firestore/firebase.js';
 
 const require = createRequire(import.meta.url);
@@ -10,6 +10,15 @@ const oAuthClientCredentials = require('../../private/service_accounts/gmail-wat
 
 const { client_secret, client_id, redirect_uris } = oAuthClientCredentials.web;
 const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[1]);
+
+export async function getOAuthClientOf(userId) {
+	const newOAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[1]);
+
+	const userData = await readDocument('users', userId);
+	newOAuth2Client.setCredentials({ refresh_token: userData.refresh_token });
+
+	return newOAuth2Client;
+}
 
 async function exchangeCodeForToken(code) {
     return new Promise((resolve, reject) => {
