@@ -4,7 +4,7 @@ import { createRequire } from 'module';
 
 import { createDocument, existsDoc, updateDocument, readDocument } from '../firestore/crud.js';
 import { firebaseAuth } from '../firestore/firebase.js';
-import { RequiredVariableError, UnexpectedError, TokenError } from '../errors/errors.js';
+import { RequiredVariableError, UnexpectedError, TokenError, DocumentNotFound, DocumentAlreadyExists } from '../errors/errors.js';
 import { logger } from '../errors/logger.js';
 
 const require = createRequire(import.meta.url);
@@ -49,8 +49,9 @@ export async function getOAuthClientOf(userId) {
 			stack: error.stack,
 		});
 
-		switch (error) {
-			case error instanceof ReferenceError:
+		switch (error.constructor) {
+			case ReferenceError:
+			case DocumentNotFound:
 				throw error;
 			default:
 				logger.error('Unexpected error during getOAuthClientOf:', error);
@@ -139,14 +140,11 @@ export async function validateCode(code) {
 			stack: error.stack,
 		});
 
-		switch (error) {
-			case error instanceof RequiredVariableError:
-				throw error;
-			case error instanceof TokenError:
-				throw error;
-			case error instanceof ReferenceError:
-				throw error;
-			case error instanceof UnexpectedError:
+		switch (error.constructor) {
+			case RequiredVariableError:
+			case TokenError:
+			case ReferenceError:
+			case UnexpectedError:
 				throw error;
 			default:
 				logger.error('Unexpected error during validateCode:', error);
@@ -192,8 +190,8 @@ async function getUserInfo(oAuth2Client) {
 			stack: error.stack,
 		});
 
-		switch (error) {
-			case error instanceof ReferenceError:
+		switch (error.constructor) {
+			case ReferenceError:
 				throw error;
 			default:
 				logger.error('Unexpected error during getUserInfo:', error);
@@ -225,7 +223,7 @@ async function saveUserData(userId, userData) {
 	}
 
 	try {
-		const exists = await existsDoc('users', userId);
+		const exists = existsDoc('users', userId);
 
 		if (exists) await updateDocument('users', userId, userData);
 		else await createDocument('users', userId, userData);
@@ -235,8 +233,11 @@ async function saveUserData(userId, userData) {
 			stack: error.stack,
 		});
 
-		//TODO - Once the exceptions of the CRUD functions are handled, this block should be removed
-		switch (error) {
+		switch (error.constructor) {
+			case DocumentAlreadyExists:
+			case DocumentNotFound:
+			case UnexpectedError:
+				throw error;
 			default:
 				logger.error('Unexpected error during saveUserData:', error);
 				throw new UnexpectedError(`Failed to save user data: ${error.message}`);
@@ -288,12 +289,10 @@ async function getUserData(refreshToken) {
 			stack: error.stack,
 		});
 
-		switch (error) {
-			case error instanceof RequiredVariableError:
-				throw error;
-			case error instanceof ReferenceError:
-				throw error;
-			case error instanceof UnexpectedError:
+		switch (error.constructor) {
+			case RequiredVariableError:
+			case ReferenceError:
+			case UnexpectedError:
 				throw error;
 			default:
 				logger.error('Unexpected error during getUserData:', error);
@@ -347,10 +346,9 @@ async function exchangeCodeForToken(code) {
 			stack: error.stack,
 		});
 
-		switch (error) {
-			case error instanceof TokenError:
-				throw error;
-			case error instanceof ReferenceError:
+		switch (error.constructor) {
+			case TokenError:
+			case ReferenceError:
 				throw error;
 			default:
 				logger.error('Unexpected error during token exchange:', error);
@@ -407,12 +405,10 @@ export async function refreshAllTokens(ids) {
 			stack: error.stack,
 		});
 
-		switch (error) {
-			case error instanceof TokenError:
-				throw error;
-			case error instanceof ReferenceError:
-				throw error;
-			case error instanceof UnexpectedError:
+		switch (error.constructor) {
+			case TokenError:
+			case ReferenceError:
+			case UnexpectedError:
 				throw error;
 			default:
 				logger.error('Token refresh operation failed:', error);
@@ -468,12 +464,10 @@ async function refreshToken(refreshToken) {
 			stack: error.stack,
 		});
 
-		switch (error) {
-			case error instanceof TokenError:
-				throw error;
-			case error instanceof ReferenceError:
-				throw error;
-			case error instanceof UnexpectedError:
+		switch (error.constructor) {
+			case TokenError:
+			case ReferenceError:
+			case UnexpectedError:
 				throw error;
 			default:
 				logger.error('Unexpected error during token refresh:', error);

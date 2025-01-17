@@ -35,3 +35,25 @@ export class UnexpectedError extends Error {
 function remark(txt) {
 	return `\x1b[1m\x1b[31m${txt}\x1b[0m`;
 }
+
+// Base CRUD error
+export class FirestoreCRUDError extends Error {
+	constructor(message) {
+		super(message);
+		this.name = 'FirestoreCRUDError';
+	}
+}
+
+export class DocumentAlreadyExists extends FirestoreCRUDError {
+	constructor(message) {
+		super(message);
+		this.name = 'DocumentAlreadyExists';
+	}
+}
+
+export class DocumentNotFound extends FirestoreCRUDError {
+	constructor(message) {
+		super(message);
+		this.name = 'DocumentNotFound';
+	}
+}
