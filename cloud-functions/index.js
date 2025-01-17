@@ -9,7 +9,6 @@ import { validateCode, getOAuthClientOf } from './app/manager/oauth2/authorize.j
 import { firebaseAuth } from './app/manager/firestore/firebase.js';
 import { getHistoryListSince } from './app/manager/gmail/list/list.js';
 
-
 import oAuthClientCredentials from './app/private/service_accounts/gmail-watch-client-oauth.json' with { type: "json" };
 
 export const watchRenew = async (req, res) => {
@@ -92,6 +91,7 @@ export const watchDisable = async (req, res) => {
 		console.error('Error updating watch data:', error);
 		res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
 			error: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+			errorMessage: error.message,
 		});
 	}
 };
@@ -140,6 +140,7 @@ export const authToken = async (req, res) => {
 	} catch (error) {
 		res.status(StatusCodes.BAD_REQUEST).send({
 			error: getReasonPhrase(StatusCodes.BAD_REQUEST),
+			errorMessage: error.message,
 		});
 	}
 };

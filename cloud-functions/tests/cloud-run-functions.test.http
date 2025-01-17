@@ -1,0 +1,32 @@
+post https://europe-west2-neoinbox.cloudfunctions.net/watch-renew
+Content-Type: application/json
+
+{}
+
+###
+
+post https://europe-west2-neoinbox.cloudfunctions.net/watch-enable
+Content-Type: application/json
+
+{
+	"historyId": "4949",
+	"expiration": 1737104318,
+	"userId": "qBzgYJKSW2cAYg0D4WkZZATuDAS2"
+}
+
+###
+
+post https://europe-west2-neoinbox.cloudfunctions.net/auth-google
+Content-Type: application/json
+
+{}
+
+###
+
+post https://europe-west2-neoinbox.cloudfunctions.net/auth-token
+Content-Type: application/json
+
+{
+  // Introduce the code from the url retrieved by https...auth-google
+  "code": "4/0AanRRrsG9hWrQe772Y5EH-O1ufXm9pFIiD1cIJTbupGJUjiVzFQ1IybLVHzfrXt65caIog"
+}

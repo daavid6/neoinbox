@@ -11,7 +11,7 @@
 		"deploy:auth-google": "gcloud functions deploy auth-google --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=authGoogle --trigger-http --allow-unauthenticated",
 		"deploy:auth-token": "gcloud functions deploy auth-token --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=authToken --trigger-http --allow-unauthenticated",
 		"deploy:email-retrieve": "gcloud functions deploy email-retrieve --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=newMessage --trigger-topic=gmail-watch-topic",
-		"deploy:all": "npm run deploy:watch-renew && npm run deploy:watch-enable && npm run deploy:watch-disable && npm run deploy:auth-google && npm run deploy:auth-token"
+		"deploy:all": "npm run deploy:watch-renew && npm run deploy:watch-enable && npm run deploy:watch-disable && npm run deploy:auth-google && npm run deploy:auth-token && npm run deploy:email-retrieve"
 	},
 	"repository": {
 		"type": "git",
@@ -33,6 +33,12 @@
 		"@google-cloud/functions-framework": "^3.4.4",
 		"firebase-admin": "^13.0.2",
 		"googleapis": "^144.0.0",
-		"http-status-codes": "^2.3.0"
+		"http-status-codes": "^2.3.0",
+		"winston": "^3.17.0"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.18.0",
+		"eslint": "^9.18.0",
+		"globals": "^15.14.0"
 	}
 }
