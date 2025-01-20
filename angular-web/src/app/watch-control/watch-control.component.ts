@@ -22,7 +22,7 @@ export class WatchControlComponent {
 	) {}
 
 	ngOnInit() {
-		if (!this.authenticationService.getIsLoggedIn())
+		if (!this.authenticationService.isLoggedIn())
 			this.router.navigate(['/authenticate']);
 	}
 
