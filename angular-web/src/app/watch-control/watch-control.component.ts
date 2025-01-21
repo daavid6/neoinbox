@@ -22,11 +22,16 @@ export class WatchControlComponent {
 	) {}
 
 	async ngOnInit() {
-		if (!this.authenticationService.isLoggedIn())
+		if (!this.authenticationService.isLoggedIn()) {
 			this.router.navigate(['/authenticate']);
+			return;
+		}
 
 		this.userId = this.authenticationService.getCurrentUserId();
-		if (!this.userId) this.router.navigate(['/authenticate']);
+		if (!this.userId) {
+			this.router.navigate(['/authenticate']);
+			return;
+		}
 
 		this.isWatchEnabled = await this.watchGmailService.isWatchEnabled(
 			this.userId as string
