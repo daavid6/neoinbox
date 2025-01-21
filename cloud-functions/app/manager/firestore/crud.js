@@ -49,10 +49,9 @@ export async function readDocument(collection, docId, fields = null) {
 				.where('__name__', '==', docId)
 				.select(...fields);
 
-			const querySnapshot = await query.get();
-			doc = querySnapshot.docs[0];
+			doc = await query.get().docs[0];
 		} else {
-			doc = await getDoc(collection, docId);
+			doc = (await getDoc(collection, docId)).doc;
 		}
 
 		if (!doc.exists) throw new DocumentNotFound();
@@ -152,9 +151,8 @@ export async function existsDoc(collection, docId) {
 		return doc.exists;
 	} catch (error) {
 		logger.error('Unexpected error during existsDoc:', error);
-		throw new UnexpectedError(`Unexpected error during existsDoc: ${error.message}`);		
+		throw new UnexpectedError(`Unexpected error during existsDoc: ${error.message}`);
 	}
-
 }
 
 /**
@@ -178,7 +176,7 @@ export async function checkExpiringWatches() {
 		});
 
 		logger.info(queryInfo);
-		return queryInfo;	
+		return queryInfo;
 	} catch (error) {
 		switch (error.constructor) {
 			case UnexpectedError:
@@ -186,7 +184,7 @@ export async function checkExpiringWatches() {
 			default:
 				logger.error('Unexpected error during checkExpiringWatches:', error);
 				throw new UnexpectedError(`Unexpected error during checkExpiringWatches: ${error.message}`);
-		}		
+		}
 	}
 }
 

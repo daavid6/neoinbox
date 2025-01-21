@@ -21,7 +21,7 @@ export async function getHistoryListSince(oAuth2Client, startHistoryId) {
 				userId: 'me',
 				id: message.id,
 				format: 'metadata',
-				metadataHeaders: ['Subject', 'From'],
+				metadataHeaders: ['Subject', 'From', 'To'],
 			});
 
 			const subject = msg.data.payload.headers?.find((h) => h.name === 'Subject')?.value;
