@@ -39,9 +39,21 @@ export async function createDocument(collection, docId, data) {
  * @throws {DocumentNotFound} - If the document is not found.
  * @throws {UnexpectedError} - If an unexpected error occurs during the process.
  */
-export async function readDocument(collection, docId) {
+export async function readDocument(collection, docId, fields = null) {
 	try {
-		const { doc } = await getDoc(collection, docId);
+		let doc;
+
+		if (fields) {
+			const query = db
+				.collection(collection)
+				.where('__name__', '==', docId)
+				.select(...fields);
+
+			const querySnapshot = await query.get();
+			doc = querySnapshot.docs[0];
+		} else {
+			doc = await getDoc(collection, docId);
+		}
 
 		if (!doc.exists) throw new DocumentNotFound();
 

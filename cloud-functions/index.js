@@ -145,6 +145,46 @@ export const authToken = async (req, res) => {
 	}
 };
 
+export const watchStatus = async (req, res) => {
+	res.set('Access-Control-Allow-Origin', '*');
+	res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+	res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+	if (req.method === 'OPTIONS') {
+		res.status(StatusCodes.NO_CONTENT).send('');
+		return;
+	}
+
+	const { userId } = req.query;
+
+	if (!userId) {
+		return res.status(StatusCodes.BAD_REQUEST).json({
+			error: 'Missing required field: userId',
+			code: StatusCodes.BAD_REQUEST
+		});
+	}
+
+	try {
+		const userData = await readDocument('users', userId, ['watch.enabled']);
+	
+        if (!userData?.watch) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                error: 'Watch data not found',
+                code: StatusCodes.NOT_FOUND
+            });
+        }
+
+        res.status(StatusCodes.OK).json(userData.watch.enabled);
+	}
+	catch (error) {
+		console.error('Error getting watch status:', error);
+		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+			error: error.message,
+			code: StatusCodes.INTERNAL_SERVER_ERROR
+		});
+	}
+};
+
 export const newMessage = async (pubSubEvent, _context) => {
     try {
         const message = JSON.parse(Buffer.from(pubSubEvent.data.message.data, 'base64').toString());
@@ -177,6 +217,7 @@ export const newMessage = async (pubSubEvent, _context) => {
 functions.http('watchRenew', watchRenew);
 functions.http('watchEnable', watchEnable);
 functions.http('watchDisable', watchDisable);
+functions.http('watchStatus', watchStatus);
 functions.http('authGoogle', authGoogle);
 functions.http('authToken', authToken);
 functions.cloudEvent('newMessage', newMessage);

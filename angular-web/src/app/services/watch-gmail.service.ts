@@ -64,6 +64,14 @@ export class WatchGmailService {
 		console.log('Response:', res);
 	}
 
+	public async isWatchEnabled(userId: string): Promise<boolean> {
+		return await firstValueFrom(
+			this.http.get<boolean>(
+				`https://europe-west2-neoinbox.cloudfunctions.net/watch-status?userId=${userId}`
+			)
+		);
+	}
+
 	private async updateWatchData(
 		historyId: string,
 		expiration: number,
@@ -80,7 +88,7 @@ export class WatchGmailService {
 				this.http.post<string>(
 					`https://europe-west2-neoinbox.cloudfunctions.net/watch-enable`,
 					{
-						historyId,
+						historyId: String(historyId),
 						expiration,
 						userId,
 					}

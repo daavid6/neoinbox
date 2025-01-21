@@ -13,7 +13,7 @@ import { AuthService } from '../services/auth.service';
 })
 export class WatchControlComponent {
 	public isWatchEnabled: boolean = false;
-	public isWatchDisabled: boolean = false;
+	private userId: string | null = null;
 
 	constructor(
 		private watchGmailService: WatchGmailService,
@@ -21,19 +21,24 @@ export class WatchControlComponent {
 		private router: Router
 	) {}
 
-	ngOnInit() {
+	async ngOnInit() {
 		if (!this.authenticationService.isLoggedIn())
 			this.router.navigate(['/authenticate']);
+
+		this.userId = this.authenticationService.getCurrentUserId();
+		if (!this.userId) this.router.navigate(['/authenticate']);
+
+		this.isWatchEnabled = await this.watchGmailService.isWatchEnabled(
+			this.userId as string
+		);
 	}
 
 	public async enableWatch() {
 		try {
 			this.isWatchEnabled = true;
-			this.isWatchDisabled = false;
 			await this.watchGmailService.watchGmail();
 		} catch (error) {
 			this.isWatchEnabled = false;
-			this.isWatchDisabled = true;
 			console.error('Error while enabling watch gmail:', error);
 		}
 	}
@@ -41,11 +46,9 @@ export class WatchControlComponent {
 	public async disableWatch() {
 		try {
 			this.isWatchEnabled = false;
-			this.isWatchDisabled = true;
 			await this.watchGmailService.unWatchGmail();
 		} catch (error) {
 			this.isWatchEnabled = true;
-			this.isWatchDisabled = false;
 			console.error('Error while disabling watch gmail:', error);
 		}
 	}

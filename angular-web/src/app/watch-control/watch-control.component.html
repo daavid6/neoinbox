@@ -11,8 +11,8 @@
 		</button>
 		<button
 			(click)="disableWatch()"
-			[disabled]="isWatchDisabled"
-			[ngClass]="{ 'disabled-button': isWatchDisabled }"
+			[disabled]="!isWatchEnabled"
+			[ngClass]="{ 'disabled-button': !isWatchEnabled }"
 		>
 			Disable watch
 		</button>

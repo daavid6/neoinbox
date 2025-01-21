@@ -71,7 +71,7 @@ export async function getOAuthClientOf(userId) {
  * @returns {Object} - The formatted user data object.
  * @throws {RequiredVariableError} - If the userId or refreshToken parameter is missing.
  */
-function formatUserData(userId, refreshToken) {
+function formatUserData(userId, refreshToken, historyId = '', expiration = Timestamp.fromMillis(Date.now()), enabled = false) {
 	if (!userId) {
 		logger.error('Missing userId parameter');
 		throw new RequiredVariableError({ userId });
@@ -86,9 +86,9 @@ function formatUserData(userId, refreshToken) {
 		userId,
 		userData: {
 			watch: {
-				historyId: '',
-				expiration: Timestamp.fromMillis(Date.now()),
-				enabled: false,
+				historyId,
+				expiration,
+				enabled,
 			},
 			refresh_token: refreshToken,
 		},
@@ -225,8 +225,7 @@ async function saveUserData(userId, userData) {
 	try {
 		const exists = existsDoc('users', userId);
 
-		if (exists) await updateDocument('users', userId, userData);
-		else await createDocument('users', userId, userData);
+		if (!exists) await createDocument('users', userId, userData);
 	} catch (error) {
 		logger.error(`Failed to save user data for user ${userId}:`, {
 			error: error.message,
@@ -268,7 +267,9 @@ async function getUserData(refreshToken) {
 
 		try {
 			const userRecord = await firebaseAuth.getUserByEmail(userInfo.email);
-			return formatUserData(userRecord.uid, refreshToken);
+			await updateDocument('users', userRecord.uid, { refresh_token: refreshToken });
+			const data = await readDocument('users', userRecord.uid);
+			return { userId: userRecord.uid, userData: data };
 		} catch (error) {
 			if (error.code === 'auth/user-not-found') {
 				const newUser = await firebaseAuth.createUser({
