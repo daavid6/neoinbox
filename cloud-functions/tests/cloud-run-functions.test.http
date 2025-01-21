@@ -16,6 +16,19 @@ Content-Type: application/json
 
 ###
 
+post https://europe-west2-neoinbox.cloudfunctions.net/watch-disable
+Content-Type: application/json
+
+{
+	"userId": "qBzgYJKSW2cAYg0D4WkZZATuDAS2"
+}
+
+###
+
+get https://europe-west2-neoinbox.cloudfunctions.net/watch-status?userId=qBzgYJKSW2cAYg0D4WkZZATuDAS2
+
+###
+
 post https://europe-west2-neoinbox.cloudfunctions.net/auth-google
 Content-Type: application/json
 
