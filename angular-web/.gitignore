@@ -44,3 +44,5 @@ Thumbs.db
 
 # Other
 private/
+.prettierrc
+eslint.config.mjs
