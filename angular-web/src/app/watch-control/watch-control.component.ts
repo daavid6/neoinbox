@@ -18,7 +18,7 @@ export class WatchControlComponent {
 	constructor(
 		private watchGmailService: WatchGmailService,
 		private authenticationService: AuthService,
-		private router: Router
+		private router: Router,
 	) {}
 
 	async ngOnInit() {
@@ -33,9 +33,7 @@ export class WatchControlComponent {
 			return;
 		}
 
-		this.isWatchEnabled = await this.watchGmailService.isWatchEnabled(
-			this.userId as string
-		);
+		this.isWatchEnabled = await this.watchGmailService.isWatchEnabled(this.userId as string);
 	}
 
 	public async enableWatch() {
@@ -56,5 +54,9 @@ export class WatchControlComponent {
 			this.isWatchEnabled = true;
 			console.error('Error while disabling watch gmail:', error);
 		}
+	}
+
+	public goConfig() {
+		this.router.navigate(['/macro-stepper']);
 	}
 }

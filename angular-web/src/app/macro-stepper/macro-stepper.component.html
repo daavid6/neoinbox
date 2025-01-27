@@ -1,0 +1,85 @@
+<section class="container">
+	<mat-card class="example-card" appearance="outlined">
+		<mat-card-header>
+			<mat-card-title>New Macro</mat-card-title>
+		</mat-card-header>
+
+		<mat-card-content>
+			<mat-stepper class="example-stepper" [orientation]="(stepperOrientation | async)!">
+				<mat-step [stepControl]="firstFormGroup" label="Fill out your name">
+					<form [formGroup]="firstFormGroup">
+						<mat-form-field>
+							<mat-label>Name</mat-label>
+							<input
+								matInput
+								placeholder="Last name, First name"
+								formControlName="firstCtrl"
+								required
+							/>
+						</mat-form-field>
+						<div>
+							<button type="button" mat-button matStepperNext>Next</button>
+						</div>
+					</form>
+				</mat-step>
+
+				<mat-step [stepControl]="secondFormGroup" label="Select one or more Tags">
+					<form [formGroup]="secondFormGroup">
+						<mat-form-field class="example-form-field">
+							<mat-chip-grid #chipGrid aria-label="Enter template form keywords">
+								@for (keyword of selectedTags(); track keyword) {
+									<mat-chip-row (removed)="removeKeyword(keyword)">
+										{{ keyword }}
+										<button
+											matChipRemove
+											aria-label="'remove template form' + keyword"
+										>
+											<mat-icon>cancel</mat-icon>
+										</button>
+									</mat-chip-row>
+								}
+
+								<input
+									name="currentTag"
+									placeholder="Add tag"
+									class="chip-input"
+									#tagInput
+									[(ngModel)]="currentTag"
+									[matChipInputFor]="chipGrid"
+									[matAutocomplete]="auto"
+									[matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+									(matChipInputTokenEnd)="addKeywordInputEvent($event)"
+								/>
+								<mat-autocomplete #auto="matAutocomplete">
+									@for (tag of filteredTags(); track tag) {
+										<mat-option
+											(onSelectionChange)="addKeywordFromOption($event)"
+											[value]="tag"
+											>{{ tag }}</mat-option
+										>
+									}
+								</mat-autocomplete>
+							</mat-chip-grid>
+						</mat-form-field>
+
+						<div>
+							<ng-content select="[selector]"></ng-content>
+							<button type="button" mat-button matStepperPrevious>Back</button>
+							<button type="button" mat-button matStepperNext>Next</button>
+						</div>
+					</form>
+				</mat-step>
+
+				<mat-step>
+					<ng-template matStepLabel>Done</ng-template>
+					<p>You are now done.</p>
+					<div>
+						<button mat-button matStepperPrevious>Back</button>
+					</div>
+				</mat-step>
+			</mat-stepper>
+		</mat-card-content>
+
+		<mat-card-footer class="example-card-footer"> </mat-card-footer>
+	</mat-card>
+</section>

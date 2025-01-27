@@ -1,0 +1,25 @@
+:host {
+	display: flex;
+	min-height: 100vh;
+	width: 100%;
+	box-sizing: border-box;
+	background: linear-gradient(220.55deg, #565656 0%, #181818 100%);
+}
+
+.container {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+}
+
+.example-stepper {
+	margin-top: 0.5rem;
+	width: 100%;
+}
+
+.mat-mdc-form-field {
+	margin-top: 1rem;
+	width: 100%;
+}
