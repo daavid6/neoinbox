@@ -23,11 +23,11 @@
 					</form>
 				</mat-step>
 
-				<mat-step [stepControl]="secondFormGroup" label="Select one or more Tags">
+				<mat-step [stepControl]="secondFormGroup" label="Select one or more Labels">
 					<form [formGroup]="secondFormGroup">
 						<mat-form-field class="example-form-field">
 							<mat-chip-grid #chipGrid aria-label="Enter template form keywords">
-								@for (keyword of selectedTags(); track keyword) {
+								@for (keyword of selectedLabels(); track keyword) {
 									<mat-chip-row (removed)="removeKeyword(keyword)">
 										{{ keyword }}
 										<button
@@ -40,22 +40,22 @@
 								}
 
 								<input
-									name="currentTag"
-									placeholder="Add tag"
+									name="currentLabel"
+									placeholder="Add label"
 									class="chip-input"
-									#tagInput
-									[(ngModel)]="currentTag"
+									#labelInput
+									[(ngModel)]="currentLabel"
 									[matChipInputFor]="chipGrid"
 									[matAutocomplete]="auto"
 									[matChipInputSeparatorKeyCodes]="separatorKeysCodes"
 									(matChipInputTokenEnd)="addKeywordInputEvent($event)"
 								/>
 								<mat-autocomplete #auto="matAutocomplete">
-									@for (tag of filteredTags(); track tag) {
+									@for (label of filteredLabels(); track label) {
 										<mat-option
 											(onSelectionChange)="addKeywordFromOption($event)"
-											[value]="tag"
-											>{{ tag }}</mat-option
+											[value]="label"
+											>{{ label }}</mat-option
 										>
 									}
 								</mat-autocomplete>

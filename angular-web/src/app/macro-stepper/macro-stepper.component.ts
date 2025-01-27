@@ -41,16 +41,16 @@ import { MatOptionSelectionChange } from '@angular/material/core';
 })
 export class MacroStepperComponent {
 	readonly separatorKeysCodes: number[] = [ENTER, COMMA];
-	private readonly allTags: string[] = ['Tag1', 'Tag2', 'Tag3', 'Test']; // Obtained from the user's GMAIL
-	public readonly selectedTags = signal<string[]>([]);
+	private readonly allLabels: string[] = ['Label1', 'Label2', 'Label3', 'Test']; // Obtained from the user's GMAIL
+	public readonly selectedLabels = signal<string[]>([]);
 
-	readonly currentTag = model<string>('');
+	readonly currentLabel = model<string>('');
 
-	readonly filteredTags = computed(() => {
-		const currentTag = this.currentTag().toLowerCase().trim();
+	readonly filteredLabels = computed(() => {
+		const currentLabel = this.currentLabel().toLowerCase().trim();
 
-		return this.allTags.filter(
-			(tag) => tag.toLowerCase().includes(currentTag) && !this.selectedTags().includes(tag),
+		return this.allLabels.filter(
+			(label) => label.toLowerCase().includes(currentLabel) && !this.selectedLabels().includes(label),
 		);
 	});
 
@@ -76,9 +76,9 @@ export class MacroStepperComponent {
 	});
 
 	private addKeyword(keyword: string): boolean {
-		if (!this.allTags.includes(keyword) || this.selectedTags().includes(keyword)) return false;
+		if (!this.allLabels.includes(keyword) || this.selectedLabels().includes(keyword)) return false;
 
-		this.selectedTags.update((keywords) => [...keywords, keyword]);
+		this.selectedLabels.update((keywords) => [...keywords, keyword]);
 		return true;
 	}
 
@@ -100,7 +100,7 @@ export class MacroStepperComponent {
 	}
 
 	public removeKeyword(keyword: string): void {
-		this.selectedTags.update((keywords: string[]) => {
+		this.selectedLabels.update((keywords: string[]) => {
 			if (!keywords.includes(keyword)) return keywords;
 
 			this.announcer.announce(`removed ${keyword}`);
