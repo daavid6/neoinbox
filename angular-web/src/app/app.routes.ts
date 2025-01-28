@@ -10,5 +10,5 @@ export const routes: Routes = [
 	{ path: 'watch-control', component: WatchControlComponent },
 	{ path: 'callback', component: AuthCallbackComponent },
 	{ path: 'macro-stepper', component: MacroStepperComponent },
-	{ path: '', redirectTo: '/authenticate', pathMatch: 'full' },
+	{ path: '**', redirectTo: '/authenticate', pathMatch: 'full' },
 ];
