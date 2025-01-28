@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, model, signal } from '@angular/core';
-import { FormBuilder, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { StepperOrientation, MatStepperModule } from '@angular/material/stepper';
@@ -11,11 +11,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { AsyncPipe } from '@angular/common';
 
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MatIconModule } from '@angular/material/icon';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { MatOptionSelectionChange } from '@angular/material/core';
+import { WatchGmailService } from '../services/watch-gmail.service';
+import { MatGridListModule } from '@angular/material/grid-list';
 
 @Component({
 	selector: 'app-macro-stepper',
@@ -34,53 +36,75 @@ import { MatOptionSelectionChange } from '@angular/material/core';
 		MatChipsModule,
 		FormsModule,
 		MatIconModule,
+		MatGridListModule,
 	],
 	templateUrl: './macro-stepper.component.html',
 	styleUrl: './macro-stepper.component.css',
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MacroStepperComponent {
-	readonly separatorKeysCodes: number[] = [ENTER, COMMA];
-	private readonly allLabels: string[] = ['Label1', 'Label2', 'Label3', 'Test']; // Obtained from the user's GMAIL
-	public readonly selectedLabels = signal<string[]>([]);
+	protected readonly stepperOrientation: Observable<StepperOrientation>;
+	protected readonly separatorKeysCodes: number[] = [ENTER, COMMA];
 
-	readonly currentLabel = model<string>('');
+	// ---- Step 1: What to do ---- //
 
-	readonly filteredLabels = computed(() => {
-		const currentLabel = this.currentLabel().toLowerCase().trim();
+	// The options for 'What to do' in the macro
+	protected readonly options: any[] = [
+		{ text: 'Attachment', cols: 2, rows: 1, color: 'lightblue' },
+		{ text: 'Content', cols: 1, rows: 2, color: 'lightgreen' },
+		{ text: 'Summary', cols: 1, rows: 1, color: 'lightpink' },
+		{ text: 'Dates', cols: 1, rows: 1, color: '#DDBDF1' },
+	];
 
-		return this.allLabels.filter(
-			(label) => label.toLowerCase().includes(currentLabel) && !this.selectedLabels().includes(label),
+	// ---- Step 2: When to do it ---- //
+
+	// The form control for user input
+	protected readonly currentLabel = new FormControl<string>('');
+
+	// A signal to store the current typed value
+	protected readonly typedValue = signal<string>('');
+
+	protected readonly filteredLabels = computed(() => {
+		const value = this.typedValue().toLowerCase().trim();
+		return this.allLabels().filter(
+			(label) =>
+				label.toLowerCase().includes(value) && !this.selectedLabels().includes(label),
 		);
 	});
+	protected allLabels = signal<string[]>([]);
+	public selectedLabels = signal<string[]>([]);
 
-	private _formBuilder = inject(FormBuilder);
-	announcer = inject(LiveAnnouncer);
+	private sub?: Subscription;
 
-	stepperOrientation: Observable<StepperOrientation>;
+	async ngOnInit() {
+		this.sub = this.currentLabel.valueChanges.subscribe((value) => {
+			this.typedValue.set(value ?? '');
+		});
 
-	constructor() {
-		const breakpointObserver = inject(BreakpointObserver);
+		try {
+			const labels = await this.watchGmailService.getLabels();
 
-		this.stepperOrientation = breakpointObserver
+			if (labels) this.allLabels.set(labels.map((label) => label.name));
+		} catch (error) {
+			console.error('Error fetching Gmail labels:', error);
+		}
+	}
+
+	ngOnDestroy() {
+		this.sub?.unsubscribe();
+	}
+
+	constructor(
+		private watchGmailService: WatchGmailService,
+		private breakpointObserver: BreakpointObserver,
+		private announcer: LiveAnnouncer,
+	) {
+		this.stepperOrientation = this.breakpointObserver
 			.observe('(min-width: 800px)')
 			.pipe(map(({ matches }) => (matches ? 'horizontal' : 'vertical')));
 	}
 
-	firstFormGroup = this._formBuilder.group({
-		firstCtrl: ['', Validators.required],
-	});
-
-	secondFormGroup = this._formBuilder.group({
-		secondCtrl: ['', Validators.required],
-	});
-
-	private addKeyword(keyword: string): boolean {
-		if (!this.allLabels.includes(keyword) || this.selectedLabels().includes(keyword)) return false;
-
-		this.selectedLabels.update((keywords) => [...keywords, keyword]);
-		return true;
-	}
+	// Functions to add and remove keywords
 
 	public addKeywordInputEvent(event: MatChipInputEvent): void {
 		const keyword = (event.value || '').trim();
@@ -92,11 +116,20 @@ export class MacroStepperComponent {
 	}
 
 	public addKeywordFromOption(event: MatOptionSelectionChange): void {
-		const keyword = (event.source.value || '').trim();
+		if (!event.isUserInput) return;
 
+		const keyword = (event.source.value || '').trim();
 		if (!this.addKeyword(keyword)) return;
 
 		this.announcer.announce(`added ${keyword}`);
+	}
+
+	private addKeyword(keyword: string): boolean {
+		if (!this.allLabels().includes(keyword) || this.selectedLabels().includes(keyword))
+			return false;
+
+		this.selectedLabels.update((keywords) => [...keywords, keyword]);
+		return true;
 	}
 
 	public removeKeyword(keyword: string): void {

@@ -1,21 +1,16 @@
 <section class="container">
-	<mat-card class="example-card" appearance="outlined">
+	<mat-card appearance="outlined">
 		<mat-card-header>
 			<mat-card-title>New Macro</mat-card-title>
 		</mat-card-header>
 
 		<mat-card-content>
-			<mat-stepper class="example-stepper" [orientation]="(stepperOrientation | async)!">
-				<mat-step [stepControl]="firstFormGroup" label="Fill out your name">
-					<form [formGroup]="firstFormGroup">
+			<mat-stepper class="stepper" [orientation]="(stepperOrientation | async)!">
+				<mat-step label="Set a name for the Macro">
+					<form>
 						<mat-form-field>
-							<mat-label>Name</mat-label>
-							<input
-								matInput
-								placeholder="Last name, First name"
-								formControlName="firstCtrl"
-								required
-							/>
+							<mat-label>Macro's name</mat-label>
+							<input matInput required />
 						</mat-form-field>
 						<div>
 							<button type="button" mat-button matStepperNext>Next</button>
@@ -23,9 +18,33 @@
 					</form>
 				</mat-step>
 
-				<mat-step [stepControl]="secondFormGroup" label="Select one or more Labels">
-					<form [formGroup]="secondFormGroup">
-						<mat-form-field class="example-form-field">
+				<mat-step label="Select what to do">
+					<form>
+						<mat-grid-list cols="3" rowHeight="8rem">
+							<mat-chip-listbox>
+								@for (option of options; track option) {
+									<mat-grid-tile
+										[colspan]="option.cols"
+										[rowspan]="option.rows"
+										[style.background]="option.color"
+									>
+										<mat-chip-option>{{ option.text }}</mat-chip-option>
+									</mat-grid-tile>
+								}
+							</mat-chip-listbox>
+						</mat-grid-list>
+
+						<div>
+							<ng-content select="[selector]"></ng-content>
+							<button type="button" mat-button matStepperPrevious>Back</button>
+							<button type="button" mat-button matStepperNext>Next</button>
+						</div>
+					</form>
+				</mat-step>
+
+				<mat-step label="Select one or more Labels">
+					<form>
+						<mat-form-field>
 							<mat-chip-grid #chipGrid aria-label="Enter template form keywords">
 								@for (keyword of selectedLabels(); track keyword) {
 									<mat-chip-row (removed)="removeKeyword(keyword)">
@@ -42,9 +61,8 @@
 								<input
 									name="currentLabel"
 									placeholder="Add label"
-									class="chip-input"
 									#labelInput
-									[(ngModel)]="currentLabel"
+									[formControl]="currentLabel"
 									[matChipInputFor]="chipGrid"
 									[matAutocomplete]="auto"
 									[matChipInputSeparatorKeyCodes]="separatorKeysCodes"
@@ -79,7 +97,5 @@
 				</mat-step>
 			</mat-stepper>
 		</mat-card-content>
-
-		<mat-card-footer class="example-card-footer"> </mat-card-footer>
 	</mat-card>
 </section>

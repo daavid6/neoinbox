@@ -14,12 +14,16 @@
 	width: 100%;
 }
 
-.example-stepper {
+.stepper {
 	margin-top: 0.5rem;
 	width: 100%;
 }
 
 .mat-mdc-form-field {
 	margin-top: 1rem;
+	width: 100%;
+}
+
+.mat-mdc-chip-set {
 	width: 100%;
 }

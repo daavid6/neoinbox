@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
 
 import { environment } from '../private/enviroments/enviroment';
 import { AuthService } from './auth.service';
+import { Label } from '../interfaces/Label';
 
 declare const gapi: any;
 
@@ -14,7 +15,10 @@ declare const gapi: any;
 export class WatchGmailService {
 	private isGapiInitialized: boolean = false;
 
-	constructor(private authService: AuthService, private http: HttpClient) {
+	constructor(
+		private authService: AuthService,
+		private http: HttpClient,
+	) {
 		this.authService.accessToken$.subscribe((token) => {
 			if (token && !this.isGapiInitialized) {
 				this.initializeGapiClient(token);
@@ -36,11 +40,7 @@ export class WatchGmailService {
 		});
 
 		if (res.result.historyId) {
-			await this.updateWatchData(
-				res.result.historyId,
-				res.result.expiration,
-				true
-			);
+			await this.updateWatchData(res.result.historyId, res.result.expiration, true);
 		}
 
 		console.log('Watch response:', res);
@@ -67,15 +67,15 @@ export class WatchGmailService {
 	public async isWatchEnabled(userId: string): Promise<boolean> {
 		return await firstValueFrom(
 			this.http.get<boolean>(
-				`https://europe-west2-neoinbox.cloudfunctions.net/watch-status?userId=${userId}`
-			)
+				`https://europe-west2-neoinbox.cloudfunctions.net/watch-status?userId=${userId}`,
+			),
 		);
 	}
 
 	private async updateWatchData(
 		historyId: string,
 		expiration: number,
-		beingEnable: boolean
+		beingEnable: boolean,
 	): Promise<string> {
 		const userId = this.authService.getCurrentUserId();
 
@@ -91,17 +91,14 @@ export class WatchGmailService {
 						historyId: String(historyId),
 						expiration,
 						userId,
-					}
-				)
+					},
+				),
 			);
 		} else {
 			await firstValueFrom(
-				this.http.post(
-					'https://europe-west2-neoinbox.cloudfunctions.net/watch-disable',
-					{
-						userId,
-					}
-				)
+				this.http.post('https://europe-west2-neoinbox.cloudfunctions.net/watch-disable', {
+					userId,
+				}),
 			);
 		}
 
@@ -112,12 +109,34 @@ export class WatchGmailService {
 		gapi.load('client', async () => {
 			await gapi.client.init({
 				apiKey: environment.gmailApiKey,
-				discoveryDocs: [
-					'https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest',
-				],
+				discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest'],
 			});
 			gapi.client.setToken({ access_token: token });
 			this.isGapiInitialized = true;
 		});
+	}
+
+	public async getLabels(): Promise<Label[] | null> {
+		if (!this.isGapiInitialized) {
+			console.error('GAPI client not initialized');
+			throw new Error('GAPI client not initialized');
+		}
+
+		let labels: Label[];
+
+		try {
+			const res = await gapi.client.gmail.users.labels.list({
+				userId: 'me',
+				requestBody: {},
+			});
+
+			labels = res.result.labels;
+		} catch (error) {
+			throw new Error('Error while getting labels');
+		}
+
+		if (!labels || labels.length == 0) return null;
+
+		return labels;
 	}
 }
