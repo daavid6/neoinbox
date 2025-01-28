@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { MacroStepperComponent } from './macro-stepper.component';
+import { MacroCreateComponent } from './macro-create.component';
 
-describe('MacroStepperComponent', () => {
-  let component: MacroStepperComponent;
-  let fixture: ComponentFixture<MacroStepperComponent>;
+describe('MacroCreateComponent', () => {
+  let component: MacroCreateComponent;
+  let fixture: ComponentFixture<MacroCreateComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MacroStepperComponent]
+      imports: [MacroCreateComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(MacroStepperComponent);
+    fixture = TestBed.createComponent(MacroCreateComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

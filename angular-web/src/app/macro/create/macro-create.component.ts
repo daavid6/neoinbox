@@ -16,11 +16,11 @@ import { map } from 'rxjs/operators';
 import { MatIconModule } from '@angular/material/icon';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { MatOptionSelectionChange } from '@angular/material/core';
-import { WatchGmailService } from '../services/watch-gmail.service';
+import { WatchGmailService } from '../../services/watch-gmail.service';
 import { MatGridListModule } from '@angular/material/grid-list';
 
 @Component({
-	selector: 'app-macro-stepper',
+	selector: 'app-macro-create',
 	imports: [
 		MatStepperModule,
 		MatCardModule,
@@ -38,11 +38,11 @@ import { MatGridListModule } from '@angular/material/grid-list';
 		MatIconModule,
 		MatGridListModule,
 	],
-	templateUrl: './macro-stepper.component.html',
-	styleUrl: './macro-stepper.component.css',
+	templateUrl: './macro-create.component.html',
+	styleUrl: './macro-create.component.css',
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MacroStepperComponent {
+export class MacroCreateComponent {
 	protected readonly stepperOrientation: Observable<StepperOrientation>;
 	protected readonly separatorKeysCodes: number[] = [ENTER, COMMA];
 

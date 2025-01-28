@@ -57,6 +57,6 @@ export class WatchControlComponent {
 	}
 
 	public goConfig() {
-		this.router.navigate(['/macro-stepper']);
+		this.router.navigate(['/macro-create']);
 	}
 }
