@@ -27,3 +27,11 @@
 .mat-mdc-chip-set {
 	width: 100%;
 }
+
+.mat-grid-list {
+	margin: 1rem 0;
+}
+
+.done {
+	margin: 1rem 0;
+}

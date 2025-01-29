@@ -57,6 +57,6 @@ export class WatchControlComponent {
 	}
 
 	public goConfig() {
-		this.router.navigate(['/macro-create']);
+		this.router.navigate(['/macro-menu']);
 	}
 }

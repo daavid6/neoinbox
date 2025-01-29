@@ -20,7 +20,7 @@
 
 				<mat-step label="Select what to do">
 					<form>
-						<mat-grid-list cols="3" rowHeight="8rem">
+						<mat-grid-list class="mat-grid-list" cols="3" rowHeight="8rem">
 							<mat-chip-listbox>
 								@for (option of options; track option) {
 									<mat-grid-tile
@@ -90,7 +90,7 @@
 
 				<mat-step>
 					<ng-template matStepLabel>Done</ng-template>
-					<p>You are now done.</p>
+					<p class="done">You are now done.</p>
 					<div>
 						<button mat-button matStepperPrevious>Back</button>
 					</div>
