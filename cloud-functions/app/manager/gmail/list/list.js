@@ -27,11 +27,13 @@ export async function getHistoryListSince(oAuth2Client, startHistoryId) {
 			const subject = msg.data.payload.headers?.find((h) => h.name === 'Subject')?.value;
 			const from = msg.data.payload.headers?.find((h) => h.name === 'From')?.value;
 			const to = msg.data.payload.headers?.find((h) => h.name === 'To')?.value;
+			const labels = msg.data.labelIds;
 
 			console.log('Message ID:', message.id);
 			console.log('From:', from || 'No From');
 			console.log('To:', to);
 			console.log('Subject:', subject || 'No Subject');
+			console.log('Labels:', labels.toLocaleString());
 
 			console.log('-----------------\n');
 		}
