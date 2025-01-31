@@ -21,14 +21,16 @@
 				<mat-step label="Select what to do">
 					<form>
 						<mat-grid-list class="mat-grid-list" cols="3" rowHeight="8rem">
-							<mat-chip-listbox>
+							<mat-chip-listbox (change)="onOptionSelected($event)">
 								@for (option of options; track option) {
 									<mat-grid-tile
 										[colspan]="option.cols"
 										[rowspan]="option.rows"
 										[style.background]="option.color"
 									>
-										<mat-chip-option>{{ option.text }}</mat-chip-option>
+										<mat-chip-option [value]="option.text">{{
+											option.text
+										}}</mat-chip-option>
 									</mat-grid-tile>
 								}
 							</mat-chip-listbox>
@@ -86,6 +88,34 @@
 							<button type="button" mat-button matStepperNext>Next</button>
 						</div>
 					</form>
+				</mat-step>
+
+				<mat-step label="Where to apply">
+					@switch (selectedOption()) {
+						@case (WHAT_TO_DO_OPTIONS.attachment) {
+							<div class="drive-picker-container">
+								<button mat-raised-button (click)="openPicker()">
+									Select Google Drive Folders
+								</button>
+								@if (selectedFolders().length > 0) {
+									<mat-chip-listbox>
+										@for (folder of selectedFolders(); track folder.id) {
+											<mat-chip>{{ folder.name }}</mat-chip>
+										}
+									</mat-chip-listbox>
+								}
+							</div>
+						}
+						@case (WHAT_TO_DO_OPTIONS.content) {
+							OPCIONES DE Contenido
+						}
+						@case (WHAT_TO_DO_OPTIONS.summary) {
+							OPCIONES DE Resumen
+						}
+						@case (WHAT_TO_DO_OPTIONS.dates) {
+							OPCIONES DE Fechas
+						}
+					}
 				</mat-step>
 
 				<mat-step>

@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	signal,
+	WritableSignal,
+	CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { BreakpointObserver } from '@angular/cdk/layout';
@@ -8,55 +15,67 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
-import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
+import { MatChipInputEvent, MatChipListboxChange, MatChipsModule } from '@angular/material/chips';
 import { AsyncPipe } from '@angular/common';
-
-import { Observable, Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { MatIconModule } from '@angular/material/icon';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { MatOptionSelectionChange } from '@angular/material/core';
-import { WatchGmailService } from '../../services/watch-gmail.service';
 import { MatGridListModule } from '@angular/material/grid-list';
+
+import { Observable, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+import { WatchGmailService } from '../../services/watch-gmail.service';
+import { DriveService } from '../../services/drive.service';
 
 @Component({
 	selector: 'app-macro-create',
 	imports: [
+		// Angular Material
 		MatStepperModule,
 		MatCardModule,
-		FormsModule,
-		ReactiveFormsModule,
 		MatFormFieldModule,
 		MatAutocompleteModule,
 		MatInputModule,
 		MatButtonModule,
-		AsyncPipe,
-		MatButtonModule,
-		MatFormFieldModule,
 		MatChipsModule,
-		FormsModule,
 		MatIconModule,
 		MatGridListModule,
+		// Angular Forms
+		FormsModule,
+		ReactiveFormsModule,
+		// Utilities
+		AsyncPipe,
 	],
 	templateUrl: './macro-create.component.html',
 	styleUrl: './macro-create.component.css',
 	changeDetection: ChangeDetectionStrategy.OnPush,
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class MacroCreateComponent {
+	public selectedFolders = signal<{ name: string; id: string }[]>([]);
+
 	protected readonly stepperOrientation: Observable<StepperOrientation>;
 	protected readonly separatorKeysCodes: number[] = [ENTER, COMMA];
+	protected readonly WHAT_TO_DO_OPTIONS = {
+		attachment: 'Attachment',
+		content: 'Content',
+		summary: 'Summary',
+		dates: 'Dates',
+	};
 
-	// ---- Step 1: What to do ---- //
+	// ---- Step 2: What to do ---- //
 
 	// The options for 'What to do' in the macro
+	protected readonly selectedOption: WritableSignal<string> = signal<string>('');
 	protected readonly options: any[] = [
-		{ text: 'Attachment', cols: 2, rows: 1, color: 'lightblue' },
-		{ text: 'Content', cols: 1, rows: 2, color: 'lightgreen' },
-		{ text: 'Summary', cols: 1, rows: 1, color: 'lightpink' },
-		{ text: 'Dates', cols: 1, rows: 1, color: '#DDBDF1' },
+		{ text: this.WHAT_TO_DO_OPTIONS.attachment, cols: 2, rows: 1, color: 'lightblue' },
+		{ text: this.WHAT_TO_DO_OPTIONS.content, cols: 1, rows: 2, color: 'lightgreen' },
+		{ text: this.WHAT_TO_DO_OPTIONS.summary, cols: 1, rows: 1, color: 'lightpink' },
+		{ text: this.WHAT_TO_DO_OPTIONS.dates, cols: 1, rows: 1, color: '#DDBDF1' },
 	];
 
-	// ---- Step 2: When to do it ---- //
+	// ---- Step 3: When to do it ---- //
 
 	// The form control for user input
 	protected readonly currentLabel = new FormControl<string>('');
@@ -75,10 +94,21 @@ export class MacroCreateComponent {
 	public selectedLabels = signal<string[]>([]);
 
 	private sub?: Subscription;
+	private folderSub?: Subscription;
+
+	protected appId: any;
+	protected oauth: any;
+	protected client: any;
+
+	protected wasDrivePickerClicked: boolean = false;
 
 	async ngOnInit() {
 		this.sub = this.currentLabel.valueChanges.subscribe((value) => {
 			this.typedValue.set(value ?? '');
+		});
+
+		this.folderSub = this.driveService.folderSelected.subscribe((folders) => {
+			this.selectedFolders.set(folders);
 		});
 
 		try {
@@ -92,16 +122,23 @@ export class MacroCreateComponent {
 
 	ngOnDestroy() {
 		this.sub?.unsubscribe();
+		this.folderSub?.unsubscribe();
 	}
 
 	constructor(
 		private watchGmailService: WatchGmailService,
 		private breakpointObserver: BreakpointObserver,
 		private announcer: LiveAnnouncer,
+		protected driveService: DriveService,
 	) {
 		this.stepperOrientation = this.breakpointObserver
 			.observe('(min-width: 800px)')
 			.pipe(map(({ matches }) => (matches ? 'horizontal' : 'vertical')));
+	}
+
+	// What to do
+	protected onOptionSelected(event: MatChipListboxChange): void {
+		this.selectedOption.set(event.value);
 	}
 
 	// Functions to add and remove keywords
@@ -139,5 +176,10 @@ export class MacroCreateComponent {
 			this.announcer.announce(`removed ${keyword}`);
 			return keywords.filter((k) => k !== keyword);
 		});
+	}
+
+	// Drive Picker
+	protected openPicker() {
+		this.driveService.showPicker();
 	}
 }
