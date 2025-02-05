@@ -38,7 +38,7 @@ export class MacroMenuComponent {
 	protected pageSize = DEFAULT_MACROS_PER_PAGE;
 	protected pageSizeOptions: number[] = [1, 2, 4, 6];
 	protected length = 0;
-	protected currentPage = 0;
+	protected index = 0;
 
 	@ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -65,8 +65,6 @@ export class MacroMenuComponent {
 			this.length = this.parsedMacros.length;
 			this.dataSource = new MatTableDataSource(this.array);
 			this.dataSource.paginator = this.paginator;
-
-			this.iterator();
 		} catch (error) {
 			console.error('Error initializing component:', error);
 		}
@@ -74,18 +72,10 @@ export class MacroMenuComponent {
 
 	// Reacts to paginator events
 	protected handlePage(event: PageEvent) {
-		this.currentPage = event.pageIndex;
-		this.pageSize = event.pageSize;
-		this.iterator();
-	}
+		const end = (this.index + 1) * this.pageSize;
 
-	// Iterates over the data array to display the correct page
-	private iterator() {
-		const end = (this.currentPage + 1) * this.pageSize;
-		const start = this.currentPage * this.pageSize;
-		const part = this.array.slice(start, end);
-		this.dataSource = new MatTableDataSource(part);
-		this.dataSource.paginator = this.paginator;
+		this.pageSize = event.pageSize;
+		this.index = event.pageIndex / end - 1;
 	}
 
 	// Redirect to the macro creation page
