@@ -1,6 +1,10 @@
 import { EventEmitter, Injectable } from '@angular/core';
+
 import { web } from '../private/service_accounts/google-drive-picker-client.json';
 import { environment } from '../private/enviroments/enviroment';
+import { NameId } from '../interfaces/Other';
+
+type Folder = NameId;
 
 @Injectable({
 	providedIn: 'root',
@@ -10,9 +14,7 @@ export class DriveService {
 	private accessToken: string = '';
 	private pickerInited: boolean = false;
 
-	public folderSelected: EventEmitter<{ name: string; id: string }[]> = new EventEmitter<
-		{ name: string; id: string }[]
-	>();
+	public folderSelected: EventEmitter<Folder[]> = new EventEmitter<Folder[]>();
 
 	constructor() {
 		// Initialize Google API
