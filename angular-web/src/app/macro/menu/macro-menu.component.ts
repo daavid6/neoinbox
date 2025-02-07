@@ -61,9 +61,8 @@ export class MacroMenuComponent {
 			}));
 
 			// Update data source and UI
-			this.array = [...this.parsedMacros];
 			this.length = this.parsedMacros.length;
-			this.dataSource = new MatTableDataSource(this.array);
+			this.dataSource = new MatTableDataSource(this.parsedMacros);
 			this.dataSource.paginator = this.paginator;
 		} catch (error) {
 			console.error('Error initializing component:', error);
@@ -72,10 +71,8 @@ export class MacroMenuComponent {
 
 	// Reacts to paginator events
 	protected handlePage(event: PageEvent) {
-		const end = (this.index + 1) * this.pageSize;
-
 		this.pageSize = event.pageSize;
-		this.index = event.pageIndex / end - 1;
+		this.index = event.pageIndex;
 	}
 
 	// Redirect to the macro creation page
