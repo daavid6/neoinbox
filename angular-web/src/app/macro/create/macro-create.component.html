@@ -10,26 +10,38 @@
 					<form>
 						<mat-form-field>
 							<mat-label>Macro's name</mat-label>
-							<input matInput required />
+							<input
+								matInput
+								required
+								[value]="macroName()"
+								(input)="saveMacroName($event)"
+							/>
 						</mat-form-field>
 						<div>
-							<button type="button" mat-button matStepperNext>Next</button>
+							<button
+								type="button"
+								mat-button
+								matStepperNext
+								[disabled]="!macroName()"
+							>
+								Next
+							</button>
 						</div>
 					</form>
 				</mat-step>
 
-				<mat-step label="Select what to do">
+				<mat-step label="Select an action">
 					<form>
 						<mat-grid-list class="mat-grid-list" cols="3" rowHeight="8rem">
-							<mat-chip-listbox (change)="onOptionSelected($event)">
-								@for (option of options; track option) {
+							<mat-chip-listbox (change)="onActionSelected($event)">
+								@for (action of actions; track action) {
 									<mat-grid-tile
-										[colspan]="option.cols"
-										[rowspan]="option.rows"
-										[style.background]="option.color"
+										[colspan]="action.cols"
+										[rowspan]="action.rows"
+										[style.background]="action.color"
 									>
-										<mat-chip-option [value]="option.text">{{
-											option.text
+										<mat-chip-option [value]="action.text">{{
+											action.text
 										}}</mat-chip-option>
 									</mat-grid-tile>
 								}
@@ -48,13 +60,10 @@
 					<form>
 						<mat-form-field>
 							<mat-chip-grid #chipGrid aria-label="Enter template form keywords">
-								@for (keyword of selectedLabels(); track keyword) {
-									<mat-chip-row (removed)="removeKeyword(keyword)">
-										{{ keyword }}
-										<button
-											matChipRemove
-											aria-label="'remove template form' + keyword"
-										>
+								@for (label of selectedLabels(); track label.id) {
+									<mat-chip-row (removed)="removeKeyword(label)">
+										{{ label.name }}
+										<button matChipRemove>
 											<mat-icon>cancel</mat-icon>
 										</button>
 									</mat-chip-row>
@@ -73,7 +82,9 @@
 								<mat-autocomplete #auto="matAutocomplete">
 									@for (label of filteredLabels(); track label) {
 										<mat-option
-											(onSelectionChange)="addKeywordFromOption($event)"
+											(onSelectionChange)="
+												addKeywordFromOption($event, labelInput)
+											"
 											[value]="label"
 											>{{ label }}</mat-option
 										>
@@ -91,10 +102,10 @@
 				</mat-step>
 
 				<mat-step label="Where to apply">
-					@switch (selectedOption()) {
-						@case (WHAT_TO_DO_OPTIONS.attachment) {
+					@switch (selectedAction()) {
+						@case (ACTION.Attachment) {
 							<div class="drive-picker-container">
-								<button mat-raised-button (click)="openPicker()">
+								<button mat-raised-button (click)="openPicker(ACTION.Attachment)">
 									Select Google Drive Folders
 								</button>
 								@if (selectedFolders().length > 0) {
@@ -106,13 +117,13 @@
 								}
 							</div>
 						}
-						@case (WHAT_TO_DO_OPTIONS.content) {
+						@case (ACTION.Content) {
 							OPCIONES DE Contenido
 						}
-						@case (WHAT_TO_DO_OPTIONS.summary) {
+						@case (ACTION.Summary) {
 							OPCIONES DE Resumen
 						}
-						@case (WHAT_TO_DO_OPTIONS.dates) {
+						@case (ACTION.Dates) {
 							OPCIONES DE Fechas
 						}
 					}
@@ -123,6 +134,7 @@
 					<p class="done">You are now done.</p>
 					<div>
 						<button mat-button matStepperPrevious>Back</button>
+						<button mat-button (click)="executeFinalAction()">Finish</button>
 					</div>
 				</mat-step>
 			</mat-stepper>

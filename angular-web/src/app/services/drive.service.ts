@@ -3,8 +3,10 @@ import { EventEmitter, Injectable } from '@angular/core';
 import { web } from '../private/service_accounts/google-drive-picker-client.json';
 import { environment } from '../private/enviroments/enviroment';
 import { NameId } from '../interfaces/Other';
+import { ACTION } from '../interfaces/Macro';
 
 type Folder = NameId;
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive';
 
 @Injectable({
 	providedIn: 'root',
@@ -15,6 +17,7 @@ export class DriveService {
 	private pickerInited: boolean = false;
 
 	public folderSelected: EventEmitter<Folder[]> = new EventEmitter<Folder[]>();
+	private currentAction: ACTION = ACTION.Attachment;
 
 	constructor() {
 		// Initialize Google API
@@ -23,12 +26,12 @@ export class DriveService {
 		// Initialize Google Identity Services
 		this.tokenClient = google.accounts.oauth2.initTokenClient({
 			client_id: web.client_id,
-			scope: 'https://www.googleapis.com/auth/drive.readonly',
+			scope: DRIVE_SCOPE,
+			include_granted_scopes: true,
 			callback: (response: google.accounts.oauth2.TokenResponse) => {
 				if (response.error !== undefined) throw response;
-
 				this.accessToken = response.access_token;
-				this.createPicker();
+				this.createPicker(this.currentAction);
 			},
 		});
 	}
@@ -39,42 +42,70 @@ export class DriveService {
 	}
 
 	// Create and render a Google Picker object for selecting from Drive.
-	protected createPicker(): void {
-		const folderView: google.picker.DocsView = new google.picker.DocsView(
-			google.picker.ViewId.FOLDERS,
-		)
-			.setStarred(false)
-			.setIncludeFolders(true)
-			.setSelectFolderEnabled(true)
-			.setMimeTypes('application/vnd.google-apps.folder');
-
-		const picker: google.picker.Picker = new google.picker.PickerBuilder()
-			.setTitle('Select one or more folders')
-			.addView(folderView)
-			.setSelectableMimeTypes('application/vnd.google-apps.folder')
-			.enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
-			.setOAuthToken(this.accessToken)
-			.setDeveloperKey(environment.drivePickerApiKey)
-			.setCallback((data) => this.pickerCallback(data))
-			.setAppId(environment.googleProjectConfig.projectNumber)
-			.build();
+	protected createPicker(actionType: ACTION): void {
+		this.currentAction = actionType;
+		const picker = this.getPicker(actionType);
 
 		if (this.accessToken) {
 			// Show picker directly if we have a token
 			picker.setVisible(true);
 		} else {
 			// Prompt the user to select a Google Account and ask for consent to share their data
-			this.tokenClient.requestAccessToken({ prompt: 'consent' });
+			this.tokenClient.requestAccessToken({
+				login_hint: 'daavid.dev@gmail.com',
+			});
 		}
 	}
 
-	public showPicker(): void {
+	private getPicker(actionType: ACTION): google.picker.Picker {
+		let folderView: google.picker.DocsView;
+
+		switch (actionType) {
+			case ACTION.Attachment:
+				folderView = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+					.setStarred(false)
+					.setIncludeFolders(true)
+					.setSelectFolderEnabled(true)
+					.setMimeTypes('application/vnd.google-apps.folder');
+
+				return new google.picker.PickerBuilder()
+					.setTitle('Select one or more folders')
+					.addView(folderView)
+					.setSelectableMimeTypes('application/vnd.google-apps.folder')
+					.enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+					.setOAuthToken(this.accessToken)
+					.setDeveloperKey(environment.drivePickerApiKey)
+					.setCallback((data) => this.pickerCallback(data))
+					.setAppId(environment.googleProjectConfig.projectNumber)
+					.build();
+
+			default:
+				folderView = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+					.setStarred(false)
+					.setIncludeFolders(true)
+					.setSelectFolderEnabled(true)
+					.setMimeTypes('application/vnd.google-apps.folder');
+
+				return new google.picker.PickerBuilder()
+					.setTitle('Select one or more folders')
+					.addView(folderView)
+					.setSelectableMimeTypes('application/vnd.google-apps.folder')
+					.enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+					.setOAuthToken(this.accessToken)
+					.setDeveloperKey(environment.drivePickerApiKey)
+					.setCallback((data) => this.pickerCallback(data))
+					.setAppId(environment.googleProjectConfig.projectNumber)
+					.build();
+		}
+	}
+
+	public showPicker(actionType: ACTION): void {
 		if (this.pickerInited) {
-			this.createPicker();
+			this.createPicker(actionType);
 		} else {
 			gapi.load('picker', () => {
 				this.onPickerApiLoad();
-				this.createPicker();
+				this.createPicker(actionType);
 			});
 		}
 	}

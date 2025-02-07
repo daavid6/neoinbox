@@ -27,6 +27,14 @@ import { map } from 'rxjs/operators';
 
 import { WatchGmailService } from '../../services/watch-gmail.service';
 import { DriveService } from '../../services/drive.service';
+import { ACTION, ATTACHMENT } from '../../interfaces/Macro';
+import { NameId } from '../../interfaces/Other';
+import { AuthService } from '../../services/auth.service';
+import { MacroService } from '../../services/macro.service';
+import { Router } from '@angular/router';
+
+type Folder = NameId;
+type ReducedLabel = NameId;
 
 @Component({
 	selector: 'app-macro-create',
@@ -49,33 +57,23 @@ import { DriveService } from '../../services/drive.service';
 	],
 	templateUrl: './macro-create.component.html',
 	styleUrl: './macro-create.component.css',
-	changeDetection: ChangeDetectionStrategy.OnPush,
-	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class MacroCreateComponent {
-	public selectedFolders = signal<{ name: string; id: string }[]>([]);
-
 	protected readonly stepperOrientation: Observable<StepperOrientation>;
 	protected readonly separatorKeysCodes: number[] = [ENTER, COMMA];
-	protected readonly WHAT_TO_DO_OPTIONS = {
-		attachment: 'Attachment',
-		content: 'Content',
-		summary: 'Summary',
-		dates: 'Dates',
-	};
 
-	// ---- Step 2: What to do ---- //
+	/* ---- Step 2: What to do ---- */
 
 	// The options for 'What to do' in the macro
-	protected readonly selectedOption: WritableSignal<string> = signal<string>('');
-	protected readonly options: any[] = [
-		{ text: this.WHAT_TO_DO_OPTIONS.attachment, cols: 2, rows: 1, color: 'lightblue' },
-		{ text: this.WHAT_TO_DO_OPTIONS.content, cols: 1, rows: 2, color: 'lightgreen' },
-		{ text: this.WHAT_TO_DO_OPTIONS.summary, cols: 1, rows: 1, color: 'lightpink' },
-		{ text: this.WHAT_TO_DO_OPTIONS.dates, cols: 1, rows: 1, color: '#DDBDF1' },
+	ACTION = ACTION;
+	protected readonly actions: any[] = [
+		{ text: ACTION.Attachment, cols: 2, rows: 1, color: 'lightblue' },
+		{ text: ACTION.Content, cols: 1, rows: 2, color: 'lightgreen' },
+		{ text: ACTION.Summary, cols: 1, rows: 1, color: 'lightpink' },
+		{ text: ACTION.Dates, cols: 1, rows: 1, color: '#DDBDF1' },
 	];
 
-	// ---- Step 3: When to do it ---- //
+	/* ---- Step 3: When to do it ---- */
 
 	// The form control for user input
 	protected readonly currentLabel = new FormControl<string>('');
@@ -85,23 +83,30 @@ export class MacroCreateComponent {
 
 	protected readonly filteredLabels = computed(() => {
 		const value = this.typedValue().toLowerCase().trim();
-		return this.allLabels().filter(
-			(label) =>
-				label.toLowerCase().includes(value) && !this.selectedLabels().includes(label),
-		);
-	});
-	protected allLabels = signal<string[]>([]);
-	public selectedLabels = signal<string[]>([]);
 
+		return this.allLabels()
+			.filter(
+				(label) =>
+					!this.selectedLabels().includes(label) &&
+					label.name.toLowerCase().includes(value),
+			)
+			.map((label) => label.name);
+	});
+	protected allLabels = signal<ReducedLabel[]>([]);
+
+	// Subscriptions
 	private sub?: Subscription;
 	private folderSub?: Subscription;
 
-	protected appId: any;
-	protected oauth: any;
-	protected client: any;
+	// Selections
+	protected readonly macroName: WritableSignal<string> = signal<string>('');
+	protected readonly selectedAction: WritableSignal<string> = signal<string>('');
+	protected readonly selectedLabels: WritableSignal<ReducedLabel[]> = signal<ReducedLabel[]>([]);
+	protected readonly selectedFolders: WritableSignal<Folder[]> = signal<Folder[]>([]);
 
-	protected wasDrivePickerClicked: boolean = false;
-
+	/**
+	 * The function to run when the component is initialized
+	 */
 	async ngOnInit() {
 		this.sub = this.currentLabel.valueChanges.subscribe((value) => {
 			this.typedValue.set(value ?? '');
@@ -113,13 +118,15 @@ export class MacroCreateComponent {
 
 		try {
 			const labels = await this.watchGmailService.getLabels();
-
-			if (labels) this.allLabels.set(labels.map((label) => label.name));
+			labels && this.allLabels.set(labels.map(({ name, id }) => ({ name, id })));
 		} catch (error) {
 			console.error('Error fetching Gmail labels:', error);
 		}
 	}
 
+	/**
+	 * The function to run when the component is destroyed
+	 */
 	ngOnDestroy() {
 		this.sub?.unsubscribe();
 		this.folderSub?.unsubscribe();
@@ -127,59 +134,94 @@ export class MacroCreateComponent {
 
 	constructor(
 		private watchGmailService: WatchGmailService,
+		private macroService: MacroService,
+		private authService: AuthService,
 		private breakpointObserver: BreakpointObserver,
 		private announcer: LiveAnnouncer,
 		protected driveService: DriveService,
+		private router: Router,
 	) {
 		this.stepperOrientation = this.breakpointObserver
 			.observe('(min-width: 800px)')
 			.pipe(map(({ matches }) => (matches ? 'horizontal' : 'vertical')));
 	}
 
-	// What to do
-	protected onOptionSelected(event: MatChipListboxChange): void {
-		this.selectedOption.set(event.value);
+	// Selectors
+	protected saveMacroName(event: Event): void {
+		const input = event.target as HTMLInputElement;
+		this.macroName.set(input.value);
 	}
 
-	// Functions to add and remove keywords
+	protected onActionSelected(event: MatChipListboxChange): void {
+		this.selectedAction.set(event.value);
+	}
 
-	public addKeywordInputEvent(event: MatChipInputEvent): void {
-		const keyword = (event.value || '').trim();
+	// Functions to add and remove labels
 
-		if (!this.addKeyword(keyword)) return;
+	protected addKeywordInputEvent(event: MatChipInputEvent): void {
+		const labelName = (event.value || '').trim();
 
-		this.announcer.announce(`added ${keyword}`);
+		const label: ReducedLabel | undefined = this.allLabels().find(
+			(label) => label.name.trim() == labelName,
+		);
+
+		if (!label || !this.addKeyword(label)) return;
+
+		this.announcer.announce(`added ${label}`);
 		event.chipInput!.clear();
 	}
 
-	public addKeywordFromOption(event: MatOptionSelectionChange): void {
+	protected addKeywordFromOption(
+		event: MatOptionSelectionChange,
+		labelInput: HTMLInputElement,
+	): void {
 		if (!event.isUserInput) return;
 
-		const keyword = (event.source.value || '').trim();
-		if (!this.addKeyword(keyword)) return;
+		const labelName = (event.source.value || '').trim();
+		const label: ReducedLabel | undefined = this.allLabels().find(
+			(label) => label.name.trim() == labelName,
+		);
 
-		this.announcer.announce(`added ${keyword}`);
+		if (!label || !this.addKeyword(label)) return;
+
+		this.announcer.announce(`added ${label}`);
+
+		labelInput.value = '';
+		this.currentLabel.setValue('');
+		this.typedValue.set('');
 	}
 
-	private addKeyword(keyword: string): boolean {
-		if (!this.allLabels().includes(keyword) || this.selectedLabels().includes(keyword))
+	private addKeyword(label: ReducedLabel): boolean {
+		if (!this.allLabels().includes(label) || this.selectedLabels().includes(label))
 			return false;
 
-		this.selectedLabels.update((keywords) => [...keywords, keyword]);
+		this.selectedLabels.update((labels) => [...labels, label]);
 		return true;
 	}
 
-	public removeKeyword(keyword: string): void {
-		this.selectedLabels.update((keywords: string[]) => {
-			if (!keywords.includes(keyword)) return keywords;
+	protected removeKeyword(label: ReducedLabel): void {
+		this.selectedLabels.update((labels: ReducedLabel[]) => {
+			if (!labels.includes(label)) return labels;
 
-			this.announcer.announce(`removed ${keyword}`);
-			return keywords.filter((k) => k !== keyword);
+			this.announcer.announce(`removed ${label}`);
+			return labels.filter((l) => l !== label);
 		});
 	}
 
 	// Drive Picker
-	protected openPicker() {
-		this.driveService.showPicker();
+	protected openPicker(actionType: ACTION) {
+		this.driveService.showPicker(actionType);
+	}
+
+	protected async executeFinalAction() {
+		const userId = this.authService.getCurrentUserId() || '';
+		const name = this.macroName();
+		const labels = this.selectedLabels();
+		const actionType = this.selectedAction() as ACTION;
+		const service = ATTACHMENT.GoogleDrive;
+		const remainder = this.selectedFolders();
+
+		await this.macroService.createMacro(userId, name, labels, actionType, service, remainder);
+		this.router.navigate(['/macro-menu']);
 	}
 }
