@@ -4,36 +4,38 @@ import { web } from '../private/service_accounts/google-drive-picker-client.json
 import { environment } from '../private/enviroments/enviroment';
 import { NameId } from '../interfaces/Other';
 import { ACTION } from '../interfaces/Macro';
+import { AuthService } from './auth.service';
+import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
+import { HttpClient } from '@angular/common/http';
 
 type Folder = NameId;
-const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive';
 
 @Injectable({
 	providedIn: 'root',
 })
 export class DriveService {
-	private tokenClient: google.accounts.oauth2.TokenClient;
+	// private tokenClient: google.accounts.oauth2.TokenClient;
 	private accessToken: string = '';
 	private pickerInited: boolean = false;
 
 	public folderSelected: EventEmitter<Folder[]> = new EventEmitter<Folder[]>();
 	private currentAction: ACTION = ACTION.Attachment;
 
-	constructor() {
+	constructor(private http: HttpClient) {
 		// Initialize Google API
 		gapi.load('picker', this.onPickerApiLoad.bind(this));
 
-		// Initialize Google Identity Services
-		this.tokenClient = google.accounts.oauth2.initTokenClient({
-			client_id: web.client_id,
-			scope: DRIVE_SCOPE,
-			include_granted_scopes: true,
-			callback: (response: google.accounts.oauth2.TokenResponse) => {
-				if (response.error !== undefined) throw response;
-				this.accessToken = response.access_token;
-				this.createPicker(this.currentAction);
-			},
-		});
+		// // Initialize Google Identity Services
+		// this.tokenClient = google.accounts.oauth2.initTokenClient({
+		// 	client_id: web.client_id,
+		// 	scope: DRIVE_SCOPE,
+		// 	include_granted_scopes: true,
+		// 	callback: (response: google.accounts.oauth2.TokenResponse) => {
+		// 		if (response.error !== undefined) throw response;
+		// 		this.accessToken = response.access_token;
+		// 		this.createPicker(this.currentAction);
+		// 	},
+		// });
 	}
 
 	// Drive Picker
@@ -42,7 +44,7 @@ export class DriveService {
 	}
 
 	// Create and render a Google Picker object for selecting from Drive.
-	protected createPicker(actionType: ACTION): void {
+	protected async createPicker(actionType: ACTION): Promise<void> {
 		this.currentAction = actionType;
 		const picker = this.getPicker(actionType);
 
@@ -51,9 +53,13 @@ export class DriveService {
 			picker.setVisible(true);
 		} else {
 			// Prompt the user to select a Google Account and ask for consent to share their data
-			this.tokenClient.requestAccessToken({
-				login_hint: 'daavid.dev@gmail.com',
-			});
+			// this.tokenClient.requestAccessToken();
+			try {
+				this.accessToken = await this.requestDrivePermissions();
+				this.createPicker(this.currentAction);
+			} catch (error) {
+				return;
+			}
 		}
 	}
 
@@ -123,5 +129,21 @@ export class DriveService {
 			id: doc[google.picker.Document.ID],
 		}));
 		this.folderSelected.emit(folders);
+	}
+
+	async requestDrivePermissions(): Promise<string> {
+		try {
+			const response = await firstValueFrom(
+				this.http.post<{ token: string }>(
+					'http://localhost:3000/api/auth/drive-permissions',
+					{ userId: 'qBzgYJKSW2cAYg0D4WkZZATuDAS2' },
+				),
+			);
+			this.accessToken = response.token;
+			return this.accessToken;
+		} catch (error) {
+			console.error('Error getting drive permissions:', error);
+			throw error;
+		}
 	}
 }

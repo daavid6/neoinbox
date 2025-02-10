@@ -110,13 +110,14 @@ export const authGoogle = async (req, res) => {
 	const oAuth2Client = new google.auth.OAuth2(
 		client_id,
 		client_secret,
-		redirect_uris[1] //'http://localhost:4200/callback' // Angular app callback URL
+		redirect_uris[1], //'http://localhost:4200/callback' // Angular app callback URL
 	);
 
 	const authUrl = oAuth2Client.generateAuthUrl({
 		access_type: 'offline',
 		prompt: 'consent', // force the consent window
 		scope: ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/userinfo.email'],
+		
 	});
 
 	res.json({ url: authUrl });

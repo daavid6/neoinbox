@@ -19,8 +19,8 @@ export class AuthService {
 	async initiateGoogleAuth() {
 		const response = await firstValueFrom(
 			this.http.get<{ url: string }>(
-				'https://europe-west2-neoinbox.cloudfunctions.net/auth-google'
-			)
+				'https://europe-west2-neoinbox.cloudfunctions.net/auth-google',
+			),
 		);
 		window.location.href = response.url;
 	}
@@ -30,8 +30,8 @@ export class AuthService {
 			const response = await firstValueFrom(
 				this.http.post<{ token: Tokens; userId: string }>(
 					'https://europe-west2-neoinbox.cloudfunctions.net/auth-token',
-					{ code }
-				)
+					{ code },
+				),
 			);
 
 			this.currentUserId = response.userId;
