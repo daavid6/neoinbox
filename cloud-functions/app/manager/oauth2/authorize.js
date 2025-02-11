@@ -9,9 +9,18 @@ import { logger } from '../errors/logger.js';
 
 const require = createRequire(import.meta.url);
 const oAuthClientCredentials = require('../../private/service_accounts/gmail-watch-client-oauth.json');
+const drivePickerOAuthCredentials = require('../../private/service_accounts/google-drive-picker-client.json');
 
-const { client_secret, client_id, redirect_uris } = oAuthClientCredentials.web;
-const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[1]);
+const oAuthConfigs = {
+	loginOAuth2Client: oAuthClientCredentials.web,
+	driveOAuth2Client: drivePickerOAuthCredentials.web,
+};
+
+export function getOAuthClientByType(oAuth2ClientType) {
+	const config = oAuthConfigs[oAuth2ClientType];
+	if (!config) throw new Error(`Unknown OAuth2 client type: ${oAuth2ClientType}`);
+	return new google.auth.OAuth2(config.client_id, config.client_secret, config.redirect_uris[0]);
+}
 
 /**
  * Retrieves an OAuth2 client for a given user.
@@ -33,7 +42,7 @@ export async function getOAuthClientOf(userId) {
 	}
 
 	try {
-		const newOAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[1]);
+		const oAuthClient = getOAuthClientByType('loginOAuth2Client');
 		const userData = await readDocument('users', userId);
 
 		if (!userData?.refresh_token) {
@@ -41,8 +50,8 @@ export async function getOAuthClientOf(userId) {
 			throw new ReferenceError(`No refresh token found for user ${userId}`);
 		}
 
-		newOAuth2Client.setCredentials({ refresh_token: userData.refresh_token });
-		return newOAuth2Client;
+		oAuthClient.setCredentials({ refresh_token: userData.refresh_token });
+		return oAuthClient;
 	} catch (error) {
 		logger.error(`Failed to get OAuth client for user ${userId}:`, {
 			error: error.message,

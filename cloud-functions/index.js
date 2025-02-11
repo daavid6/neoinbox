@@ -5,14 +5,12 @@ import { google } from 'googleapis';
 
 import { readDocument, updateDocument } from './app/manager/firestore/crud.js';
 import { renewExpiringWatches } from './app/manager/gmail/renew-expiring-watches.js';
-import { validateCode, getOAuthClientOf } from './app/manager/oauth2/authorize.js';
+import { validateCode, getOAuthClientOf, getOAuthClientByType } from './app/manager/oauth2/authorize.js';
 import { firebaseAuth } from './app/manager/firestore/firebase.js';
 import { getHistoryListSince } from './app/manager/gmail/list/list.js';
 
-import oAuthClientCredentials from './app/private/service_accounts/gmail-watch-client-oauth.json' with { type: "json" };
-
 export const watchRenew = async (req, res) => {
-    res.set('Access-Control-Allow-Origin', '*');
+	res.set('Access-Control-Allow-Origin', '*');
 	res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
 	res.set('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -36,7 +34,7 @@ export const watchRenew = async (req, res) => {
 };
 
 export const watchEnable = async (req, res) => {
-    res.set('Access-Control-Allow-Origin', '*');
+	res.set('Access-Control-Allow-Origin', '*');
 	res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
 	res.set('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -67,11 +65,11 @@ export const watchEnable = async (req, res) => {
 };
 
 export const watchDisable = async (req, res) => {
-    res.set('Access-Control-Allow-Origin', '*');
+	res.set('Access-Control-Allow-Origin', '*');
 	res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
 	res.set('Access-Control-Allow-Headers', 'Content-Type');
 
-    if (req.method === 'OPTIONS') {
+	if (req.method === 'OPTIONS') {
 		res.status(204).send('');
 		return;
 	}
@@ -98,26 +96,67 @@ export const watchDisable = async (req, res) => {
 
 export const authGoogle = async (req, res) => {
 	res.set('Access-Control-Allow-Origin', '*');
-	res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+	res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
 	res.set('Access-Control-Allow-Headers', 'Content-Type');
 
+	// Http request handling
 	if (req.method === 'OPTIONS') {
-		res.status(204).send('');
+		res.status(StatusCodes.NO_CONTENT).send({
+			data: {},
+			message: ReasonPhrases.NO_CONTENT,
+		});
 		return;
 	}
 
-	const { client_secret, client_id, redirect_uris } = oAuthClientCredentials.web;
-	const oAuth2Client = new google.auth.OAuth2(
-		client_id,
-		client_secret,
-		redirect_uris[1], //'http://localhost:4200/callback' // Angular app callback URL
-	);
+	if (req.method !== 'POST') {
+		res.status(StatusCodes.METHOD_NOT_ALLOWED).send({
+			error: ReasonPhrases.METHOD_NOT_ALLOWED,
+			errorMessage: 'Invalid HTTP method. Only POST is allowed.',
+		});
+		return;
+	}
 
+	// Check if the payload is valid
+	if (!req.body) {
+		res.status(StatusCodes.BAD_REQUEST).send({
+			error: ReasonPhrases.BAD_REQUEST,
+			errorMessage: 'Invalid payload format.',
+		});
+		return;
+	}
+
+	const payloadObj = req.body;
+
+	if (!payloadObj || !payloadObj.clientType || !payloadObj.scopes) {
+		res.status(StatusCodes.BAD_REQUEST).send({
+			error: ReasonPhrases.BAD_REQUEST,
+			errorMessage: 'Missing clientType or scopes in payload.',
+		});
+		return;
+	}
+
+	const clientType = payloadObj.clientType;
+	const scopes = payloadObj.scopes;
+
+	// Get the oAuth2Client;
+	let oAuth2Client;
+	try {
+		oAuth2Client = getOAuthClientByType(clientType);
+	} catch (error) {
+		res.status(StatusCodes.BAD_REQUEST).send({
+			error: ReasonPhrases.BAD_REQUEST,
+			errorMessage: 'Invalid clientType in payload.' + error.message,
+		});
+		return;
+	}
+
+	// Generate the auth URL with the given scopes
 	const authUrl = oAuth2Client.generateAuthUrl({
 		access_type: 'offline',
-		prompt: 'consent', // force the consent window
-		scope: ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/userinfo.email'],
-		
+		prompt: 'consent',
+		include_granted_scopes: true,
+		scope: scopes,
+		state: payloadObj.state ? JSON.stringify(payloadObj.state) : undefined,
 	});
 
 	res.json({ url: authUrl });
@@ -136,11 +175,11 @@ export const authToken = async (req, res) => {
 	const { code } = req.body;
 
 	try {
-		const {token, userId} = await validateCode(code);
+		const { token, userId } = await validateCode(code);
 		res.json({ token, userId });
 	} catch (error) {
 		res.status(StatusCodes.BAD_REQUEST).send({
-			error: getReasonPhrase(StatusCodes.BAD_REQUEST),
+			error: ReasonPhrases.BAD_REQUEST,
 			errorMessage: error.message,
 		});
 	}
@@ -161,58 +200,56 @@ export const watchStatus = async (req, res) => {
 	if (!userId) {
 		return res.status(StatusCodes.BAD_REQUEST).json({
 			error: 'Missing required field: userId',
-			code: StatusCodes.BAD_REQUEST
+			code: StatusCodes.BAD_REQUEST,
 		});
 	}
 
 	try {
 		const userData = await readDocument('users', userId, ['watch.enabled']);
-	
-        if (!userData?.watch) {
-            return res.status(StatusCodes.NOT_FOUND).json({
-                error: 'Watch data not found',
-                code: StatusCodes.NOT_FOUND
-            });
-        }
 
-        res.status(StatusCodes.OK).json(userData.watch.enabled);
-	}
-	catch (error) {
+		if (!userData?.watch) {
+			return res.status(StatusCodes.NOT_FOUND).json({
+				error: 'Watch data not found',
+				code: StatusCodes.NOT_FOUND,
+			});
+		}
+
+		res.status(StatusCodes.OK).json(userData.watch.enabled);
+	} catch (error) {
 		console.error('Error getting watch status:', error);
 		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 			error: error.message,
-			code: StatusCodes.INTERNAL_SERVER_ERROR
+			code: StatusCodes.INTERNAL_SERVER_ERROR,
 		});
 	}
 };
 
 export const newMessage = async (pubSubEvent, _context) => {
-    try {
-        const message = JSON.parse(Buffer.from(pubSubEvent.data.message.data, 'base64').toString());
-        const { emailAddress, historyId } = message;
+	try {
+		const message = JSON.parse(Buffer.from(pubSubEvent.data.message.data, 'base64').toString());
+		const { emailAddress, historyId } = message;
 
-        if (!emailAddress || !historyId) {
-            throw new Error('Missing required fields: emailAddress and historyId');
-        }
+		if (!emailAddress || !historyId) {
+			throw new Error('Missing required fields: emailAddress and historyId');
+		}
 
 		const userRecord = await firebaseAuth.getUserByEmail(emailAddress);
 		const oAuth2Client = await getOAuthClientOf(userRecord.uid);
 		const docData = await readDocument('users', userRecord.uid);
 
 		const [_updatedDoc, messages] = await Promise.all([
-            updateDocument('users', userRecord.uid, {
-                'watch.historyId': historyId,
-            }),
-            getHistoryListSince(oAuth2Client, docData.watch.historyId)
-        ]);
+			updateDocument('users', userRecord.uid, {
+				'watch.historyId': historyId,
+			}),
+			getHistoryListSince(oAuth2Client, docData.watch.historyId),
+		]);
 
-        console.log(`Successfully processed messages for ${emailAddress}`);
-        return { messages };
-
-    } catch (error) {
-        console.error('Error processing Pub/Sub message:', error);
-        throw error;
-    }
+		console.log(`Successfully processed messages for ${emailAddress}`);
+		return { messages };
+	} catch (error) {
+		console.error('Error processing Pub/Sub message:', error);
+		throw error;
+	}
 };
 
 functions.http('watchRenew', watchRenew);
