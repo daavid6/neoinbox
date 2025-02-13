@@ -9,10 +9,10 @@
 		"deploy:watch-enable": "gcloud functions deploy watch-enable --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=watchEnable --trigger-http --allow-unauthenticated",
 		"deploy:watch-disable": "gcloud functions deploy watch-disable --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=watchDisable --trigger-http --allow-unauthenticated",
 		"deploy:watch-status": "gcloud functions deploy watch-status --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=watchStatus --trigger-http --allow-unauthenticated",
-		"deploy:auth-google": "gcloud functions deploy auth-google --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=authGoogle --trigger-http --allow-unauthenticated",
+		"deploy:auth-url": "gcloud functions deploy auth-url --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=authUrl --trigger-http --allow-unauthenticated",
 		"deploy:auth-token": "gcloud functions deploy auth-token --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=authToken --trigger-http --allow-unauthenticated",
 		"deploy:email-retrieve": "gcloud functions deploy email-retrieve --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=newMessage --trigger-topic=gmail-watch-topic",
-		"deploy:all": "npm run deploy:watch-renew && npm run deploy:watch-enable && npm run deploy:watch-disable && npm run deploy:auth-google && npm run deploy:auth-token && npm run deploy:email-retrieve && npm run deploy:watch-status"
+		"deploy:all": "npm run deploy:watch-renew && npm run deploy:watch-enable && npm run deploy:watch-disable && npm run deploy:auth-url && npm run deploy:auth-token && npm run deploy:email-retrieve && npm run deploy:watch-status"
 	},
 	"repository": {
 		"type": "git",
@@ -40,6 +40,9 @@
 	"devDependencies": {
 		"@eslint/js": "^9.18.0",
 		"eslint": "^9.18.0",
-		"globals": "^15.14.0"
+		"globals": "^15.14.0",
+		"eslint-config-prettier": "^10.0.1",
+		"eslint-plugin-prettier": "^5.2.3",
+		"prettier": "^3.4.2"
 	}
 }
