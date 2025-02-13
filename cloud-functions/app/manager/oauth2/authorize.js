@@ -4,7 +4,13 @@ import { createRequire } from 'module';
 
 import { createDocument, existsDoc, updateDocument, readDocument } from '../firestore/crud.js';
 import { firebaseAuth } from '../firestore/firebase.js';
-import { RequiredVariableError, UnexpectedError, TokenError, DocumentNotFound, DocumentAlreadyExists } from '../errors/errors.js';
+import {
+	RequiredVariableError,
+	UnexpectedError,
+	TokenError,
+	DocumentNotFound,
+	DocumentAlreadyExists,
+} from '../errors/errors.js';
 import { logger } from '../errors/logger.js';
 
 const require = createRequire(import.meta.url);
@@ -64,7 +70,9 @@ export async function getOAuthClientOf(userId) {
 				throw error;
 			default:
 				logger.error('Unexpected error during getOAuthClientOf:', error);
-				throw new UnexpectedError(`Unexpected error during getOAuthClientOf: ${error.message}`);
+				throw new UnexpectedError(
+					`Unexpected error during getOAuthClientOf: ${error.message}`,
+				);
 		}
 	}
 }
@@ -80,7 +88,13 @@ export async function getOAuthClientOf(userId) {
  * @returns {Object} - The formatted user data object.
  * @throws {RequiredVariableError} - If the userId or refreshToken parameter is missing.
  */
-function formatUserData(userId, refreshToken, historyId = '', expiration = Timestamp.fromMillis(Date.now()), enabled = false) {
+function formatUserData(
+	userId,
+	refreshToken,
+	historyId = '',
+	expiration = Timestamp.fromMillis(Date.now()),
+	enabled = false,
+) {
 	if (!userId) {
 		logger.error('Missing userId parameter');
 		throw new RequiredVariableError({ userId });
@@ -113,36 +127,50 @@ function formatUserData(userId, refreshToken, historyId = '', expiration = Times
  * retrieves user data using the token, and saves the user data to Firestore.
  *
  * @param {string} code - The authorization code to validate.
+ * @param {string} clientType - The type of OAuth2 client to use for the validation.
  * @returns {Promise<Object>} - A promise that resolves to an object containing the token and userId.
  * @throws {RequiredVariableError} - If the code parameter is missing.
  * @throws {TokenError} - If the token exchange fails or no token is received.
  * @throws {ReferenceError} - If no refresh token is received or if user data retrieval fails.
  * @throws {UnexpectedError} - If an unexpected error occurs during the process.
  */
-export async function validateCode(code) {
+export async function validateCode(code, clientType) {
 	if (!code) {
 		logger.error('Missing code parameter');
 		throw new RequiredVariableError({ code });
 	}
 
-	try {
-		const token = await exchangeCodeForToken(code);
+	if (!clientType) {
+		logger.error('Missing clientType parameter');
+		throw new RequiredVariableError({ clientType });
+	}
 
-		if (!token?.refresh_token) {
+	try {
+		const oAuth2Client = getOAuthClientByType(clientType);
+
+		const tokens = await exchangeCodeForToken(code, oAuth2Client);
+
+		if (!tokens?.refresh_token) {
 			logger.error(`No refresh token received from OAuth exchange with code ${code}`);
 			throw new ReferenceError('No refresh token received from OAuth exchange');
 		}
 
-		const { userId, userData } = await getUserData(token.refresh_token);
+		oAuth2Client.setCredentials(tokens);
+
+		const { userId, userData } = await getUserData(tokens.refresh_token, oAuth2Client);
 
 		if (!userId || !userData) {
-			logger.error(`Failed to get valid userData or userId with refreshToken: ${token.refresh_token}`);
-			throw new ReferenceError(`Failed to get valid userData: ${userData} or userId: ${userId}`);
+			logger.error(
+				`Failed to get valid userData or userId with refreshToken: ${tokens.refresh_token}`,
+			);
+			throw new ReferenceError(
+				`Failed to get valid userData: ${userData} or userId: ${userId}`,
+			);
 		}
 
 		await saveUserData(userId, userData);
 
-		return { token, userId };
+		return { tokens, userId };
 	} catch (error) {
 		logger.error(`Failed to validate the code: ${code}:`, {
 			error: error.message,
@@ -261,14 +289,20 @@ async function saveUserData(userId, userData) {
  * and returned.
  *
  * @param {string} refreshToken - The OAuth2 refresh token.
+ * @param {google.auth.OAuth2} oAuth2Client - The OAuth2 client to use for fetching user information.
  * @returns {Promise<Object>} - A promise that resolves to the formatted user data object.
  * @throws {RequiredVariableError} - If the refreshToken parameter is missing.
  * @throws {UnexpectedError} - If an unexpected error occurs during the process.
  */
-async function getUserData(refreshToken) {
+async function getUserData(refreshToken, oAuth2Client) {
 	if (!refreshToken) {
 		logger.error('Missing refreshToken parameter');
 		throw new RequiredVariableError({ refreshToken });
+	}
+
+	if (!oAuth2Client) {
+		logger.error('Missing oAuth2Client parameter');
+		throw new RequiredVariableError({ oAuth2Client });
 	}
 
 	try {
@@ -324,10 +358,15 @@ async function getUserData(refreshToken) {
  * @throws {UnexpectedError} - If an unexpected error occurs during the process.
  *
  */
-async function exchangeCodeForToken(code) {
+async function exchangeCodeForToken(code, oAuth2Client) {
 	if (!code) {
 		logger.error('Missing code parameter');
 		throw new RequiredVariableError({ code });
+	}
+
+	if (!oAuth2Client) {
+		logger.error('Missing oAuth2Client parameter');
+		throw new RequiredVariableError({ oAuth2Client });
 	}
 
 	try {
@@ -341,7 +380,9 @@ async function exchangeCodeForToken(code) {
 				}
 				if (!token) {
 					logger.error(`No token received from OAuth2Client: ${oAuth2Client}`);
-					reject(new ReferenceError(`No token received from OAuth2Client: ${oAuth2Client}`));
+					reject(
+						new ReferenceError(`No token received from OAuth2Client: ${oAuth2Client}`),
+					);
 					return;
 				}
 				resolve(token);
@@ -362,7 +403,9 @@ async function exchangeCodeForToken(code) {
 				throw error;
 			default:
 				logger.error('Unexpected error during token exchange:', error);
-				throw new UnexpectedError(`Unexpected error during token exchange: ${error.message}`);
+				throw new UnexpectedError(
+					`Unexpected error during token exchange: ${error.message}`,
+				);
 		}
 	}
 }
@@ -445,11 +488,11 @@ async function refreshToken(refreshToken) {
 	}
 
 	try {
-		const newOAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[1]);
-		newOAuth2Client.setCredentials({ refresh_token: refreshToken });
+		const oAuth2Client = getOAuthClientByType('loginOAuth2Client');
+		oAuth2Client.setCredentials({ refresh_token: refreshToken });
 
 		const tokens = await new Promise((resolve, reject) => {
-			newOAuth2Client.refreshAccessToken((err, tokens) => {
+			oAuth2Client.refreshAccessToken((err, tokens) => {
 				if (err) {
 					logger.error('Token refresh failed:', err);
 					reject(new TokenError(`Failed to refresh token: ${err.message}`));
@@ -466,8 +509,8 @@ async function refreshToken(refreshToken) {
 			});
 		});
 
-		newOAuth2Client.setCredentials(tokens);
-		return newOAuth2Client;
+		oAuth2Client.setCredentials(tokens);
+		return oAuth2Client;
 	} catch (error) {
 		logger.error('Error in refreshToken:', {
 			error: error.message,
@@ -481,7 +524,9 @@ async function refreshToken(refreshToken) {
 				throw error;
 			default:
 				logger.error('Unexpected error during token refresh:', error);
-				throw new UnexpectedError(`Unexpected error during token refresh: ${error.message}`);
+				throw new UnexpectedError(
+					`Unexpected error during token refresh: ${error.message}`,
+				);
 		}
 	}
 }

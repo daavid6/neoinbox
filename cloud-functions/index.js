@@ -1,11 +1,14 @@
 import * as functions from '@google-cloud/functions-framework';
-import { ReasonPhrases, StatusCodes, getReasonPhrase } from 'http-status-codes';
+import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import { Timestamp } from 'firebase-admin/firestore';
-import { google } from 'googleapis';
 
 import { readDocument, updateDocument } from './app/manager/firestore/crud.js';
 import { renewExpiringWatches } from './app/manager/gmail/renew-expiring-watches.js';
-import { validateCode, getOAuthClientOf, getOAuthClientByType } from './app/manager/oauth2/authorize.js';
+import {
+	validateCode,
+	getOAuthClientOf,
+	getOAuthClientByType,
+} from './app/manager/oauth2/authorize.js';
 import { firebaseAuth } from './app/manager/firestore/firebase.js';
 import { getHistoryListSince } from './app/manager/gmail/list/list.js';
 
@@ -15,7 +18,18 @@ export const watchRenew = async (req, res) => {
 	res.set('Access-Control-Allow-Headers', 'Content-Type');
 
 	if (req.method === 'OPTIONS') {
-		res.status(204).send('');
+		res.status(StatusCodes.NO_CONTENT).send({
+			data: {},
+			message: ReasonPhrases.NO_CONTENT,
+		});
+		return;
+	}
+
+	if (req.method !== 'POST') {
+		res.status(StatusCodes.METHOD_NOT_ALLOWED).send({
+			error: ReasonPhrases.METHOD_NOT_ALLOWED,
+			errorMessage: 'Invalid HTTP method. Only POST is allowed.',
+		});
 		return;
 	}
 
@@ -26,9 +40,9 @@ export const watchRenew = async (req, res) => {
 			message: ReasonPhrases.OK,
 		});
 	} catch (error) {
-		console.error('Error renewing watch data:', error);
 		res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
-			error: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+			error: ReasonPhrases.INTERNAL_SERVER_ERROR,
+			errorMessage: `Error renewing watch data:\n ${error}`,
 		});
 	}
 };
@@ -39,7 +53,27 @@ export const watchEnable = async (req, res) => {
 	res.set('Access-Control-Allow-Headers', 'Content-Type');
 
 	if (req.method === 'OPTIONS') {
-		res.status(204).send('');
+		res.status(StatusCodes.NO_CONTENT).send({
+			data: {},
+			message: ReasonPhrases.NO_CONTENT,
+		});
+		return;
+	}
+
+	if (req.method !== 'POST') {
+		res.status(StatusCodes.METHOD_NOT_ALLOWED).send({
+			error: ReasonPhrases.METHOD_NOT_ALLOWED,
+			errorMessage: 'Invalid HTTP method. Only POST is allowed.',
+		});
+		return;
+	}
+
+	// Check if the body is valid
+	if (!req.body || !req.body.historyId || !req.body.expiration || !req.body.userId) {
+		res.status(StatusCodes.BAD_REQUEST).send({
+			error: ReasonPhrases.BAD_REQUEST,
+			errorMessage: 'Missing historyId, expiration or userId in body.',
+		});
 		return;
 	}
 
@@ -56,11 +90,15 @@ export const watchEnable = async (req, res) => {
 			'watch.expiration': Timestamp.fromMillis(expiration),
 			'watch.enabled': true,
 		});
-
-		res.status(200).json({ oldHistoryId });
+		res.status(StatusCodes.OK).send({
+			data: { oldHistoryId },
+			message: ReasonPhrases.OK,
+		});
 	} catch (error) {
-		console.error('Error updating watch data:', error);
-		res.status(500).json({ error: error.message });
+		res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
+			error: ReasonPhrases.INTERNAL_SERVER_ERROR,
+			errorMessage: `Error updating watch data: ${error}`,
+		});
 	}
 };
 
@@ -70,7 +108,27 @@ export const watchDisable = async (req, res) => {
 	res.set('Access-Control-Allow-Headers', 'Content-Type');
 
 	if (req.method === 'OPTIONS') {
-		res.status(204).send('');
+		res.status(StatusCodes.NO_CONTENT).send({
+			data: {},
+			message: ReasonPhrases.NO_CONTENT,
+		});
+		return;
+	}
+
+	if (req.method !== 'POST') {
+		res.status(StatusCodes.METHOD_NOT_ALLOWED).send({
+			error: ReasonPhrases.METHOD_NOT_ALLOWED,
+			errorMessage: 'Invalid HTTP method. Only POST is allowed.',
+		});
+		return;
+	}
+
+	// Check if the body is valid
+	if (!req.body || !req.body.userId) {
+		res.status(StatusCodes.BAD_REQUEST).send({
+			error: ReasonPhrases.BAD_REQUEST,
+			errorMessage: 'Missing userId in body.',
+		});
 		return;
 	}
 
@@ -86,15 +144,14 @@ export const watchDisable = async (req, res) => {
 			message: ReasonPhrases.OK,
 		});
 	} catch (error) {
-		console.error('Error updating watch data:', error);
 		res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
-			error: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
-			errorMessage: error.message,
+			error: ReasonPhrases.INTERNAL_SERVER_ERROR,
+			errorMessage: `Error updating watch data: ${error}`,
 		});
 	}
 };
 
-export const authGoogle = async (req, res) => {
+export const authUrl = async (req, res) => {
 	res.set('Access-Control-Allow-Origin', '*');
 	res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
 	res.set('Access-Control-Allow-Headers', 'Content-Type');
@@ -117,17 +174,7 @@ export const authGoogle = async (req, res) => {
 	}
 
 	// Check if the payload is valid
-	if (!req.body) {
-		res.status(StatusCodes.BAD_REQUEST).send({
-			error: ReasonPhrases.BAD_REQUEST,
-			errorMessage: 'Invalid payload format.',
-		});
-		return;
-	}
-
-	const payloadObj = req.body;
-
-	if (!payloadObj || !payloadObj.clientType || !payloadObj.scopes) {
+	if (!req.body || !req.body.clientType || !req.body.scopes) {
 		res.status(StatusCodes.BAD_REQUEST).send({
 			error: ReasonPhrases.BAD_REQUEST,
 			errorMessage: 'Missing clientType or scopes in payload.',
@@ -135,8 +182,8 @@ export const authGoogle = async (req, res) => {
 		return;
 	}
 
-	const clientType = payloadObj.clientType;
-	const scopes = payloadObj.scopes;
+	const clientType = req.body.clientType;
+	const scopes = req.body.scopes;
 
 	// Get the oAuth2Client;
 	let oAuth2Client;
@@ -145,7 +192,7 @@ export const authGoogle = async (req, res) => {
 	} catch (error) {
 		res.status(StatusCodes.BAD_REQUEST).send({
 			error: ReasonPhrases.BAD_REQUEST,
-			errorMessage: 'Invalid clientType in payload.' + error.message,
+			errorMessage: `Invalid clientType in payload:\n ${error}`,
 		});
 		return;
 	}
@@ -156,10 +203,13 @@ export const authGoogle = async (req, res) => {
 		prompt: 'consent',
 		include_granted_scopes: true,
 		scope: scopes,
-		state: payloadObj.state ? JSON.stringify(payloadObj.state) : undefined,
+		state: req.body.state ? JSON.stringify(req.body.state) : undefined,
 	});
 
-	res.json({ url: authUrl });
+	res.status(StatusCodes.OK).send({
+		data: { url: authUrl },
+		message: ReasonPhrases.OK,
+	});
 };
 
 export const authToken = async (req, res) => {
@@ -167,16 +217,40 @@ export const authToken = async (req, res) => {
 	res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
 	res.set('Access-Control-Allow-Headers', 'Content-Type');
 
+	// Http request handling
 	if (req.method === 'OPTIONS') {
-		res.status(204).send('');
+		res.status(StatusCodes.NO_CONTENT).send({
+			data: {},
+			message: ReasonPhrases.NO_CONTENT,
+		});
 		return;
 	}
 
-	const { code } = req.body;
+	if (req.method !== 'POST') {
+		res.status(StatusCodes.METHOD_NOT_ALLOWED).send({
+			error: ReasonPhrases.METHOD_NOT_ALLOWED,
+			errorMessage: 'Invalid HTTP method. Only POST is allowed.',
+		});
+		return;
+	}
+
+	// Check if the payload is valid
+	if (!req.body || !req.body.code || !req.body.clientType) {
+		res.status(StatusCodes.BAD_REQUEST).send({
+			error: ReasonPhrases.BAD_REQUEST,
+			errorMessage: 'Missing code or clientType in body',
+		});
+		return;
+	}
+
+	const { code, clientType } = req.body;
 
 	try {
-		const { token, userId } = await validateCode(code);
-		res.json({ token, userId });
+		const { tokens, userId } = await validateCode(code, clientType);
+		res.status(StatusCodes.OK).send({
+			data: { tokens, userId },
+			message: ReasonPhrases.OK,
+		});
 	} catch (error) {
 		res.status(StatusCodes.BAD_REQUEST).send({
 			error: ReasonPhrases.BAD_REQUEST,
@@ -191,14 +265,25 @@ export const watchStatus = async (req, res) => {
 	res.set('Access-Control-Allow-Headers', 'Content-Type');
 
 	if (req.method === 'OPTIONS') {
-		res.status(StatusCodes.NO_CONTENT).send('');
+		res.status(StatusCodes.NO_CONTENT).send({
+			data: {},
+			message: ReasonPhrases.NO_CONTENT,
+		});
+		return;
+	}
+
+	if (req.method !== 'GET') {
+		res.status(StatusCodes.METHOD_NOT_ALLOWED).send({
+			error: ReasonPhrases.METHOD_NOT_ALLOWED,
+			errorMessage: 'Invalid HTTP method. Only GET is allowed.',
+		});
 		return;
 	}
 
 	const { userId } = req.query;
 
 	if (!userId) {
-		return res.status(StatusCodes.BAD_REQUEST).json({
+		return res.status(StatusCodes.BAD_REQUEST).send({
 			error: 'Missing required field: userId',
 			code: StatusCodes.BAD_REQUEST,
 		});
@@ -208,18 +293,21 @@ export const watchStatus = async (req, res) => {
 		const userData = await readDocument('users', userId, ['watch.enabled']);
 
 		if (!userData?.watch) {
-			return res.status(StatusCodes.NOT_FOUND).json({
+			return res.status(StatusCodes.NOT_FOUND).send({
 				error: 'Watch data not found',
 				code: StatusCodes.NOT_FOUND,
 			});
 		}
 
-		res.status(StatusCodes.OK).json(userData.watch.enabled);
+		res.status(StatusCodes.OK).send({
+			data: userData.watch.enabled,
+			message: ReasonPhrases.OK,
+		});
 	} catch (error) {
 		console.error('Error getting watch status:', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			error: error.message,
-			code: StatusCodes.INTERNAL_SERVER_ERROR,
+		res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
+			error: ReasonPhrases.INTERNAL_SERVER_ERROR,
+			errorMessage: `Error getting watch status:\n ${error}`,
 		});
 	}
 };
@@ -256,6 +344,6 @@ functions.http('watchRenew', watchRenew);
 functions.http('watchEnable', watchEnable);
 functions.http('watchDisable', watchDisable);
 functions.http('watchStatus', watchStatus);
-functions.http('authGoogle', authGoogle);
+functions.http('authUrl', authUrl);
 functions.http('authToken', authToken);
 functions.cloudEvent('newMessage', newMessage);
