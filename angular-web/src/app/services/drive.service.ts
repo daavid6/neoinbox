@@ -1,12 +1,11 @@
 import { EventEmitter, Injectable } from '@angular/core';
 
-import { web } from '../private/service_accounts/google-drive-picker-client.json';
 import { environment } from '../private/enviroments/enviroment';
 import { NameId } from '../interfaces/Other';
 import { ACTION } from '../interfaces/Macro';
 import { AuthService } from './auth.service';
-import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
-import { HttpClient } from '@angular/common/http';
+import { Tokens } from '../interfaces/Tokens';
+import { CLIENT_TYPES } from '../enums/ClientTypes';
 
 type Folder = NameId;
 
@@ -21,21 +20,9 @@ export class DriveService {
 	public folderSelected: EventEmitter<Folder[]> = new EventEmitter<Folder[]>();
 	private currentAction: ACTION = ACTION.Attachment;
 
-	constructor(private http: HttpClient) {
+	constructor(private authService: AuthService) {
 		// Initialize Google API
 		gapi.load('picker', this.onPickerApiLoad.bind(this));
-
-		// // Initialize Google Identity Services
-		// this.tokenClient = google.accounts.oauth2.initTokenClient({
-		// 	client_id: web.client_id,
-		// 	scope: DRIVE_SCOPE,
-		// 	include_granted_scopes: true,
-		// 	callback: (response: google.accounts.oauth2.TokenResponse) => {
-		// 		if (response.error !== undefined) throw response;
-		// 		this.accessToken = response.access_token;
-		// 		this.createPicker(this.currentAction);
-		// 	},
-		// });
 	}
 
 	// Drive Picker
@@ -53,11 +40,15 @@ export class DriveService {
 			picker.setVisible(true);
 		} else {
 			// Prompt the user to select a Google Account and ask for consent to share their data
-			// this.tokenClient.requestAccessToken();
 			try {
-				this.accessToken = await this.requestDrivePermissions();
-				this.createPicker(this.currentAction);
+				const tokens = await this.requestDrivePermissions();
+
+				this.authService.setTokens(tokens);
+				this.accessToken = tokens.access_token;
+
+				await this.createPicker(this.currentAction);
 			} catch (error) {
+				console.error('Error requesting drive permissions:', error);
 				return;
 			}
 		}
@@ -131,19 +122,20 @@ export class DriveService {
 		this.folderSelected.emit(folders);
 	}
 
-	async requestDrivePermissions(): Promise<string> {
-		try {
-			const response = await firstValueFrom(
-				this.http.post<{ token: string }>(
-					'http://localhost:3000/api/auth/drive-permissions',
-					{ userId: 'qBzgYJKSW2cAYg0D4WkZZATuDAS2' },
-				),
-			);
-			this.accessToken = response.token;
-			return this.accessToken;
-		} catch (error) {
-			console.error('Error getting drive permissions:', error);
-			throw error;
-		}
+	protected async requestDrivePermissions(): Promise<Tokens> {
+		return new Promise<Tokens>(async (resolve, reject) => {
+			try {
+				const code = await this.authService.incrementDrivePermissions();
+				const { tokens } = await this.authService.exchangeCodeForTokens(
+					code,
+					CLIENT_TYPES.driveOAuth2Client,
+				);
+
+				resolve(tokens);
+			} catch (error) {
+				console.error('Error requesting drive permissions:', error);
+				reject(error);
+			}
+		});
 	}
 }

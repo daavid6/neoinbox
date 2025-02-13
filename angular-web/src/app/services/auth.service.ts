@@ -45,14 +45,14 @@ export class AuthService {
 		if (options?.state) payload.state = JSON.stringify(options.state);
 
 		// Call to backend endpoint which creates an auth URL based on the parameters.
-		const response: { url: string } = await firstValueFrom(
-			this.http.post<{ url: string }>(
-				'https://europe-west2-neoinbox.cloudfunctions.net/auth-google',
+		const response: { data: { url: string }; message: string } = await firstValueFrom(
+			this.http.post<{ data: { url: string }; message: string }>(
+				'https://europe-west2-neoinbox.cloudfunctions.net/auth-url',
 				payload,
 			),
 		);
 
-		return response.url;
+		return response.data.url;
 	}
 
 	/**
@@ -60,7 +60,7 @@ export class AuthService {
 	 *
 	 * @returns {Promise<void>} A promise that resolves when the authentication is initiated.
 	 */
-	public async initiateGoogleAuth(): Promise<void> {
+	public async initiateGoogleAuth(): Promise<string> {
 		const url = await this.getAuthURL({
 			clientType: CLIENT_TYPES.loginOAuth2Client,
 			scopes: [
@@ -70,43 +70,143 @@ export class AuthService {
 		});
 
 		// Redirect to the authentication URL.
-		window.location.href = url;
+		const popup = window.open(url, '_blank', `width=500,height=600,top=100,left=100`);
+
+		if (!popup) throw new Error();
+
+		const code = await new Promise<string>((resolve, reject) => {
+			// Define a message event listener.
+			const handleMessage = async (event: MessageEvent) => {
+				// Optionally validate event.origin to ensure the message comes from a trusted source.
+				if (event.data?.code) {
+					try {
+						// Clean up listener and polling timer.
+						window.removeEventListener('message', handleMessage);
+						clearInterval(pollTimer);
+						// Resolve with the received code (or even proceed with token exchange here)
+						resolve(event.data.code);
+						// Close the popup if it's still open.
+						if (!popup.closed) {
+							popup.close();
+						}
+					} catch (error) {
+						window.removeEventListener('message', handleMessage);
+						clearInterval(pollTimer);
+						reject(error);
+					}
+				}
+			};
+
+			window.addEventListener('message', handleMessage, false);
+
+			// Poll in case the user manually closes the popup before completing auth.
+			const pollTimer = window.setInterval(() => {
+				if (popup.closed) {
+					clearInterval(pollTimer);
+					window.removeEventListener('message', handleMessage);
+					reject(new Error('Authentication popup closed by user'));
+				}
+			}, 500);
+		});
+
+		return code;
 	}
 
-	
+	/**
+	 * Increments the client permissions to use G Drive.
+	 */
+	public async incrementDrivePermissions(): Promise<string> {
+		const url: string = await this.getAuthURL({
+			clientType: CLIENT_TYPES.driveOAuth2Client,
+			scopes: ['https://www.googleapis.com/auth/drive'],
+		});
+
+		// Redirect to the authentication URL.
+		const popup = window.open(url, '_blank', `width=500,height=600,top=100,left=100`);
+
+		if (!popup) throw new Error();
+
+		const code = await new Promise<string>((resolve, reject) => {
+			// Define a message event listener.
+			const handleMessage = async (event: MessageEvent) => {
+				// Optionally validate event.origin to ensure the message comes from a trusted source.
+				if (event.data?.code) {
+					try {
+						// Clean up listener and polling timer.
+						window.removeEventListener('message', handleMessage);
+						clearInterval(pollTimer);
+						// Resolve with the received code (or even proceed with token exchange here)
+						resolve(event.data.code);
+						// Close the popup if it's still open.
+						if (!popup.closed) {
+							popup.close();
+						}
+					} catch (error) {
+						window.removeEventListener('message', handleMessage);
+						clearInterval(pollTimer);
+						reject(error);
+					}
+				}
+			};
+
+			window.addEventListener('message', handleMessage, false);
+
+			// Poll in case the user manually closes the popup before completing auth.
+			const pollTimer = window.setInterval(() => {
+				if (popup.closed) {
+					clearInterval(pollTimer);
+					window.removeEventListener('message', handleMessage);
+					reject(new Error('Authentication popup closed by user'));
+				}
+			}, 500);
+		});
+
+		return code;
+	}
+
 	/*** Functions which exchange a code for tokens. ***/
 
-
-	public async exchangeCodeForTokens(code: string): Promise<Tokens> {
+	public async exchangeCodeForTokens(
+		code: string,
+		clientType: string,
+	): Promise<{ tokens: Tokens; userId: string }> {
 		try {
 			const response = await firstValueFrom(
-				this.http.post<{ token: Tokens; userId: string }>(
+				this.http.post<{ data: { tokens: Tokens; userId: string }; message: string }>(
 					'https://europe-west2-neoinbox.cloudfunctions.net/auth-token',
-					{ code },
+					{ code, clientType },
 				),
 			);
 
-			this.currentUserId = response.userId;
-			this.accessToken$.next(response.token.access_token);
-			this.isloggedIn = true;
-			return response.token;
+			return response.data;
 		} catch (error) {
 			console.error('Error exchanging code for tokens:', error);
 			throw error;
 		}
 	}
 
-	public isLoggedIn(): boolean {
-		return this.isloggedIn;
+	/*** Functions which manage the authentication state. ***/
+
+	public setTokens(tokens: Tokens): void {
+		this.accessToken$.next(tokens.access_token);
+		this.isloggedIn = true;
 	}
 
 	public getCurrentUserId(): string | null {
 		return this.currentUserId;
+	}
+
+	public setUserId(userId: string): void {
+		this.currentUserId = userId;
+	}
+
+	public isLoggedIn(): boolean {
+		return this.isloggedIn;
 	}
 }
 
 interface Payload {
 	clientType: string;
 	scopes: string[];
-	state?: string;
+	state?: object;
 }
