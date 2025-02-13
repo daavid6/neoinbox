@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AuthCallbackComponent } from './auth-callback-component.component';
+import { RedirectComponent } from './redirect.component';
 
-describe('AuthCallbackComponent', () => {
-	let component: AuthCallbackComponent;
-	let fixture: ComponentFixture<AuthCallbackComponent>;
+describe('RedirectComponent', () => {
+	let component: RedirectComponent;
+	let fixture: ComponentFixture<RedirectComponent>;
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			imports: [AuthCallbackComponent],
+			imports: [RedirectComponent],
 		}).compileComponents();
 
-		fixture = TestBed.createComponent(AuthCallbackComponent);
+		fixture = TestBed.createComponent(RedirectComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});
