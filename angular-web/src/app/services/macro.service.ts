@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
 import { Macro } from '../interfaces/Macro';
 import { NameId } from '../interfaces/Other';
 import { ACTION } from '../interfaces/Macro';
+import { ENDPOINTS } from '../enums/EndPoints';
 
 type ReducedLabel = NameId;
 
@@ -14,9 +15,15 @@ export class MacroService {
 	constructor(private http: HttpClient) {}
 
 	public async getAllMacros(userId: string) {
-		return await firstValueFrom(
-			this.http.get<Macro[]>(`http://localhost:3000/api/macro/get-all/${userId}`),
+		if (!userId) return;
+
+		const response = await firstValueFrom(
+			this.http.get<{ data: { macros: Macro[] }; message: string }>(
+				`${ENDPOINTS.getAllMacros}?userId=${userId}`,
+			),
 		);
+
+		return response.data.macros;
 	}
 
 	public async createMacro(
@@ -25,10 +32,10 @@ export class MacroService {
 		labels: ReducedLabel[],
 		actionType: ACTION,
 		service: string,
-		remainder: any,
+		remainder: object | undefined,
 	): Promise<void> {
 		await firstValueFrom(
-			this.http.post<string>(`http://localhost:3000/api/macro/create`, {
+			this.http.post<string>(ENDPOINTS.createMacro, {
 				userId,
 				name,
 				labels,

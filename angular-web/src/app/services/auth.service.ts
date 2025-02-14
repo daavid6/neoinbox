@@ -5,6 +5,7 @@ import { BehaviorSubject, firstValueFrom } from 'rxjs';
 
 import { Tokens } from '../interfaces/Tokens';
 import { CLIENT_TYPES } from '../enums/ClientTypes';
+import { ENDPOINTS } from '../enums/EndPoints';
 
 @Injectable({
 	providedIn: 'root',
@@ -42,12 +43,12 @@ export class AuthService {
 
 		if (options?.clientType) payload.clientType = options.clientType;
 		if (options?.scopes) payload.scopes = options.scopes;
-		if (options?.state) payload.state = JSON.stringify(options.state);
+		if (options?.state) payload.state = options.state;
 
 		// Call to backend endpoint which creates an auth URL based on the parameters.
 		const response: { data: { url: string }; message: string } = await firstValueFrom(
 			this.http.post<{ data: { url: string }; message: string }>(
-				'https://europe-west2-neoinbox.cloudfunctions.net/auth-url',
+				ENDPOINTS.getAuthURL,
 				payload,
 			),
 		);
@@ -173,7 +174,7 @@ export class AuthService {
 		try {
 			const response = await firstValueFrom(
 				this.http.post<{ data: { tokens: Tokens; userId: string }; message: string }>(
-					'https://europe-west2-neoinbox.cloudfunctions.net/auth-token',
+					ENDPOINTS.getTokens,
 					{ code, clientType },
 				),
 			);

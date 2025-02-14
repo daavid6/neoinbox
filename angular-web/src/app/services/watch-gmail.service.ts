@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
 import { environment } from '../private/enviroments/enviroment';
 import { AuthService } from './auth.service';
 import { Label } from '../interfaces/Label';
+import { ENDPOINTS } from '../enums/EndPoints';
 
 declare const gapi: any;
 
@@ -66,9 +67,7 @@ export class WatchGmailService {
 
 	public async isWatchEnabled(userId: string): Promise<boolean> {
 		return await firstValueFrom(
-			this.http.get<boolean>(
-				`https://europe-west2-neoinbox.cloudfunctions.net/watch-status?userId=${userId}`,
-			),
+			this.http.get<boolean>(`${ENDPOINTS.getWatchStatus}?userId=${userId}`),
 		);
 	}
 
@@ -85,18 +84,15 @@ export class WatchGmailService {
 
 		if (beingEnable) {
 			oldHistoryId = await firstValueFrom(
-				this.http.post<string>(
-					`https://europe-west2-neoinbox.cloudfunctions.net/watch-enable`,
-					{
-						historyId: String(historyId),
-						expiration,
-						userId,
-					},
-				),
+				this.http.post<string>(ENDPOINTS.enableWatch, {
+					historyId: String(historyId),
+					expiration,
+					userId,
+				}),
 			);
 		} else {
 			await firstValueFrom(
-				this.http.post('https://europe-west2-neoinbox.cloudfunctions.net/watch-disable', {
+				this.http.post(ENDPOINTS.disableWatch, {
 					userId,
 				}),
 			);

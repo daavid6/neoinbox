@@ -51,7 +51,7 @@ export class MacroMenuComponent {
 	async ngOnInit() {
 		try {
 			this.currentUserId = this.authService.getCurrentUserId() || '';
-			this.currentMacros = await this.macroService.getAllMacros(this.currentUserId);
+			this.currentMacros = (await this.macroService.getAllMacros(this.currentUserId)) ?? [];
 
 			this.parsedMacros = this.currentMacros.map((macro: Macro) => ({
 				name: macro.data.name,
