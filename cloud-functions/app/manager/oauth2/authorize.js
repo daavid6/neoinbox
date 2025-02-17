@@ -14,18 +14,14 @@ import {
 import { logger } from '../errors/logger.js';
 
 const require = createRequire(import.meta.url);
-const oAuthClientCredentials = require('../../private/service_accounts/gmail-watch-client-oauth.json');
-const drivePickerOAuthCredentials = require('../../private/service_accounts/google-drive-picker-client.json');
+const basicUserOAuthCredentials = require('../../private/service_accounts/basic-user-oAuthClient.json');
 
-const oAuthConfigs = {
-	loginOAuth2Client: oAuthClientCredentials.web,
-	driveOAuth2Client: drivePickerOAuthCredentials.web,
-};
-
-export function getOAuthClientByType(oAuth2ClientType) {
-	const config = oAuthConfigs[oAuth2ClientType];
-	if (!config) throw new Error(`Unknown OAuth2 client type: ${oAuth2ClientType}`);
-	return new google.auth.OAuth2(config.client_id, config.client_secret, config.redirect_uris[0]);
+export function getOAuthClient() {
+	return new google.auth.OAuth2(
+		basicUserOAuthCredentials.web.client_id,
+		basicUserOAuthCredentials.web.client_secret,
+		basicUserOAuthCredentials.web.redirect_uris[0],
+	);
 }
 
 /**
@@ -48,7 +44,7 @@ export async function getOAuthClientOf(userId) {
 	}
 
 	try {
-		const oAuthClient = getOAuthClientByType('loginOAuth2Client');
+		const oAuthClient = getOAuthClient();
 		const userData = await readDocument('users', userId);
 
 		if (!userData?.refresh_token) {
@@ -127,26 +123,20 @@ function formatUserData(
  * retrieves user data using the token, and saves the user data to Firestore.
  *
  * @param {string} code - The authorization code to validate.
- * @param {string} clientType - The type of OAuth2 client to use for the validation.
  * @returns {Promise<Object>} - A promise that resolves to an object containing the token and userId.
  * @throws {RequiredVariableError} - If the code parameter is missing.
  * @throws {TokenError} - If the token exchange fails or no token is received.
  * @throws {ReferenceError} - If no refresh token is received or if user data retrieval fails.
  * @throws {UnexpectedError} - If an unexpected error occurs during the process.
  */
-export async function validateCode(code, clientType) {
+export async function validateCode(code) {
 	if (!code) {
 		logger.error('Missing code parameter');
 		throw new RequiredVariableError({ code });
 	}
 
-	if (!clientType) {
-		logger.error('Missing clientType parameter');
-		throw new RequiredVariableError({ clientType });
-	}
-
 	try {
-		const oAuth2Client = getOAuthClientByType(clientType);
+		const oAuth2Client = getOAuthClient();
 
 		const tokens = await exchangeCodeForToken(code, oAuth2Client);
 
@@ -481,14 +471,14 @@ export async function refreshAllTokens(ids) {
  * @throws {RequiredVariableError} - If the ids parameter is missing or invalid.
  * @throws {UnexpectedError} - If an unexpected error occurs during the process.
  */
-async function refreshToken(refreshToken) {
+export async function refreshToken(refreshToken) {
 	if (!refreshToken) {
 		logger.error('Missing refreshToken parameter');
 		throw new RequiredVariableError({ refreshToken });
 	}
 
 	try {
-		const oAuth2Client = getOAuthClientByType('loginOAuth2Client');
+		const oAuth2Client = getOAuthClient();
 		oAuth2Client.setCredentials({ refresh_token: refreshToken });
 
 		const tokens = await new Promise((resolve, reject) => {

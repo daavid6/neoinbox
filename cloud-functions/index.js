@@ -4,11 +4,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 import { readDocument, updateDocument } from './app/manager/firestore/crud.js';
 import { renewExpiringWatches } from './app/manager/gmail/renew-expiring-watches.js';
-import {
-	validateCode,
-	getOAuthClientOf,
-	getOAuthClientByType,
-} from './app/manager/oauth2/authorize.js';
+import { validateCode, getOAuthClient } from './app/manager/oauth2/authorize.js';
 import { firebaseAuth } from './app/manager/firestore/firebase.js';
 import { getHistoryListSince } from './app/manager/gmail/list/list.js';
 import { getAction } from './app/manager/macros/actions.js';
@@ -18,6 +14,8 @@ import {
 	getAllMacros,
 	getAllMacrosWithLabels,
 } from './app/manager/macros/macros.js';
+import { TokenError } from './app/manager/errors/errors.js';
+import { logger } from './app/manager/errors/logger.js';
 
 export const watchRenew = async (req, res) => {
 	res.set('Access-Control-Allow-Origin', '*');
@@ -181,28 +179,19 @@ export const authUrl = async (req, res) => {
 	}
 
 	// Check if the payload is valid
-	if (!req.body || !req.body.clientType || !req.body.scopes) {
+	if (!req.body || !req.body.scopes) {
 		res.status(StatusCodes.BAD_REQUEST).send({
 			error: ReasonPhrases.BAD_REQUEST,
-			errorMessage: 'Missing clientType or scopes in payload.',
+			errorMessage: 'Missing scopes in payload.',
 		});
 		return;
 	}
 
-	const clientType = req.body.clientType;
 	const scopes = req.body.scopes;
 
 	// Get the oAuth2Client;
-	let oAuth2Client;
-	try {
-		oAuth2Client = getOAuthClientByType(clientType);
-	} catch (error) {
-		res.status(StatusCodes.BAD_REQUEST).send({
-			error: ReasonPhrases.BAD_REQUEST,
-			errorMessage: `Invalid clientType in payload:\n ${error}`,
-		});
-		return;
-	}
+
+	const oAuth2Client = getOAuthClient();
 
 	// Generate the auth URL with the given scopes
 	const authUrl = oAuth2Client.generateAuthUrl({
@@ -242,18 +231,18 @@ export const authToken = async (req, res) => {
 	}
 
 	// Check if the payload is valid
-	if (!req.body || !req.body.code || !req.body.clientType) {
+	if (!req.body || !req.body.code) {
 		res.status(StatusCodes.BAD_REQUEST).send({
 			error: ReasonPhrases.BAD_REQUEST,
-			errorMessage: 'Missing code or clientType in body',
+			errorMessage: 'Missing code in body',
 		});
 		return;
 	}
 
-	const { code, clientType } = req.body;
+	const { code } = req.body;
 
 	try {
-		const { tokens, userId } = await validateCode(code, clientType);
+		const { tokens, userId } = await validateCode(code);
 		res.status(StatusCodes.OK).send({
 			data: { tokens, userId },
 			message: ReasonPhrases.OK,
@@ -297,7 +286,7 @@ export const watchStatus = async (req, res) => {
 	}
 
 	try {
-		const userData = await readDocument('users', userId, ['watch.enabled']);
+		const userData = await readDocument('users', userId);
 
 		if (!userData?.watch) {
 			return res.status(StatusCodes.NOT_FOUND).send({
@@ -534,14 +523,36 @@ export const newMessage = async (pubSubEvent, _context) => {
 		}
 
 		const userRecord = await firebaseAuth.getUserByEmail(emailAddress);
-		const oAuth2Client = await getOAuthClientOf(userRecord.uid);
 		const docData = await readDocument('users', userRecord.uid);
+
+		const oAuth2Client = getOAuthClient();
+		oAuth2Client.setCredentials({ refresh_token: docData.refresh_token });
+
+		const newTokens = await new Promise((resolve, reject) => {
+			oAuth2Client.refreshAccessToken((err, tokens) => {
+				if (err) {
+					logger.error('Token refresh failed:', err);
+					reject(new TokenError(`Failed to refresh token: ${err.message}`));
+					return;
+				}
+
+				if (!tokens) {
+					logger.error('No tokens received from refresh');
+					reject(new ReferenceError('No tokens received from refresh'));
+					return;
+				}
+
+				resolve(tokens);
+			});
+		});
+
+		oAuth2Client.setCredentials(newTokens);
 
 		const [_updatedDoc, messages] = await Promise.all([
 			updateDocument('users', userRecord.uid, {
 				'watch.historyId': historyId,
 			}),
-			getHistoryListSince(oAuth2Client, docData.watch.historyId),
+			getHistoryListSince(userRecord.uid, oAuth2Client, docData.watch.historyId),
 		]);
 
 		console.log(`Successfully processed messages for ${emailAddress}`);

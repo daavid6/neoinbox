@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { CLIENT_TYPES } from '../enums/ClientTypes';
 
 @Component({
 	selector: 'app-authenticate',
@@ -25,10 +24,7 @@ export class AuthenticateComponent {
 	protected async login() {
 		try {
 			const code = await this.authService.initiateGoogleAuth();
-			const { tokens, userId } = await this.authService.exchangeCodeForTokens(
-				code,
-				CLIENT_TYPES.loginOAuth2Client,
-			);
+			const { tokens, userId } = await this.authService.exchangeCodeForTokens(code);
 
 			this.authService.setTokens(tokens);
 			this.authService.setUserId(userId);

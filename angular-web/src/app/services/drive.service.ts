@@ -5,7 +5,6 @@ import { NameId } from '../interfaces/Other';
 import { ACTION } from '../interfaces/Macro';
 import { AuthService } from './auth.service';
 import { Tokens } from '../interfaces/Tokens';
-import { CLIENT_TYPES } from '../enums/ClientTypes';
 
 type Folder = NameId;
 
@@ -126,10 +125,7 @@ export class DriveService {
 		return new Promise<Tokens>(async (resolve, reject) => {
 			try {
 				const code = await this.authService.incrementDrivePermissions();
-				const { tokens } = await this.authService.exchangeCodeForTokens(
-					code,
-					CLIENT_TYPES.driveOAuth2Client,
-				);
+				const { tokens } = await this.authService.exchangeCodeForTokens(code);
 
 				resolve(tokens);
 			} catch (error) {

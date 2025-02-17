@@ -4,7 +4,6 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 
 import { Tokens } from '../interfaces/Tokens';
-import { CLIENT_TYPES } from '../enums/ClientTypes';
 import { ENDPOINTS } from '../enums/EndPoints';
 
 @Injectable({
@@ -28,20 +27,14 @@ export class AuthService {
 	 */
 	private async getAuthURL(options: Payload): Promise<string> {
 		// Validate required parameters.
-		if (!options || !options.clientType) {
-			throw new Error('Missing required parameter: clientType');
-		}
-
-		if (!options.scopes || !Array.isArray(options.scopes) || options.scopes.length === 0) {
+		if (!options || !options.scopes || !Array.isArray(options.scopes) || options.scopes.length === 0) {
 			throw new Error('Missing required parameter: at least one valid scope is required');
 		}
 
 		const payload: Payload = {
-			clientType: '',
 			scopes: [],
 		};
 
-		if (options?.clientType) payload.clientType = options.clientType;
 		if (options?.scopes) payload.scopes = options.scopes;
 		if (options?.state) payload.state = options.state;
 
@@ -63,7 +56,6 @@ export class AuthService {
 	 */
 	public async initiateGoogleAuth(): Promise<string> {
 		const url = await this.getAuthURL({
-			clientType: CLIENT_TYPES.loginOAuth2Client,
 			scopes: [
 				'https://www.googleapis.com/auth/gmail.readonly',
 				'https://www.googleapis.com/auth/userinfo.email',
@@ -118,7 +110,6 @@ export class AuthService {
 	 */
 	public async incrementDrivePermissions(): Promise<string> {
 		const url: string = await this.getAuthURL({
-			clientType: CLIENT_TYPES.driveOAuth2Client,
 			scopes: ['https://www.googleapis.com/auth/drive'],
 		});
 
@@ -169,13 +160,12 @@ export class AuthService {
 
 	public async exchangeCodeForTokens(
 		code: string,
-		clientType: string,
 	): Promise<{ tokens: Tokens; userId: string }> {
 		try {
 			const response = await firstValueFrom(
 				this.http.post<{ data: { tokens: Tokens; userId: string }; message: string }>(
 					ENDPOINTS.getTokens,
-					{ code, clientType },
+					{ code },
 				),
 			);
 
@@ -207,7 +197,6 @@ export class AuthService {
 }
 
 interface Payload {
-	clientType: string;
 	scopes: string[];
 	state?: object;
 }
