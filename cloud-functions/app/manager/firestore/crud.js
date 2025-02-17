@@ -35,28 +35,21 @@ export async function createDocument(collection, docId, data) {
  *
  * @param {string} collection - The name of the Firestore collection.
  * @param {string} docId - The ID of the document to read.
- * @returns {Object} - The data of the document.
+ * @returns {Promise<Object>} - The data of the document.
  * @throws {DocumentNotFound} - If the document is not found.
  * @throws {UnexpectedError} - If an unexpected error occurs during the process.
  */
-export async function readDocument(collection, docId, fields = null) {
+export async function readDocument(collection, docId) {
+	const docRef = db.collection(collection).doc(docId);
+
 	try {
-		let doc;
+		const docSnapshot = await docRef.get();
 
-		if (fields) {
-			const query = db
-				.collection(collection)
-				.where('__name__', '==', docId)
-				.select(...fields);
+		if (!docSnapshot.exists) throw new DocumentNotFound();
 
-			doc = await query.get().docs[0];
-		} else {
-			doc = (await getDoc(collection, docId)).doc;
-		}
+		const doc = docSnapshot.data();
 
-		if (!doc.exists) throw new DocumentNotFound();
-
-		return doc.data();
+		return doc;
 	} catch (error) {
 		switch (error.constructor) {
 			case DocumentNotFound:
@@ -166,7 +159,12 @@ export async function checkExpiringWatches() {
 	const nearExpiration = new Date(Date.now() + 1000 * 60 * 60 * 24 * 8);
 
 	try {
-		const snapshot = await db.collection('users').select('refresh_token').where('watch.expiration', '<=', nearExpiration).where('watch.enabled', '==', true).get();
+		const snapshot = await db
+			.collection('users')
+			.select('refresh_token')
+			.where('watch.expiration', '<=', nearExpiration)
+			.where('watch.enabled', '==', true)
+			.get();
 
 		snapshot.forEach((doc) => {
 			queryInfo.push({
@@ -183,7 +181,9 @@ export async function checkExpiringWatches() {
 				throw error;
 			default:
 				logger.error('Unexpected error during checkExpiringWatches:', error);
-				throw new UnexpectedError(`Unexpected error during checkExpiringWatches: ${error.message}`);
+				throw new UnexpectedError(
+					`Unexpected error during checkExpiringWatches: ${error.message}`,
+				);
 		}
 	}
 }
