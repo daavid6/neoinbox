@@ -147,8 +147,8 @@ export async function getAllMacrosWithLabels(user, labelIds) {
 	}
 }
 
-export function mergeMacros(macrosArray) {
-	const actionObject = { attachment: {} };
+export function mergeMacrosActions(macrosArray) {
+	const actionObject = {};
 
 	macrosArray.forEach((macro) => {
 		const action = macro.data.action;

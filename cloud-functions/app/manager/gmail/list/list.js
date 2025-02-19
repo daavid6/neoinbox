@@ -16,29 +16,20 @@ export async function getHistoryListSince(oAuth2Client, startHistoryId) {
 			return [];
 		}
 
-		for (const message of res.data.messages) {
-			const msg = await gmail.users.messages.get({
+		const partialMessages = res.data.messages;
+
+		const messagesPromises = partialMessages.map(async (partialMessage) => {
+			const res = await gmail.users.messages.get({
 				userId: 'me',
-				id: message.id,
-				format: 'metadata',
-				metadataHeaders: ['Subject', 'From', 'To'],
+				id: partialMessage.id,
+				format: 'full',
 			});
+			return res.data;
+		});
 
-			const subject = msg.data.payload.headers?.find((h) => h.name === 'Subject')?.value;
-			const from = msg.data.payload.headers?.find((h) => h.name === 'From')?.value;
-			const to = msg.data.payload.headers?.find((h) => h.name === 'To')?.value;
-			const labels = msg.data.labelIds;
+		const messages = await Promise.all(messagesPromises);
 
-			console.log('Message ID:', message.id);
-			console.log('From:', from || 'No From');
-			console.log('To:', to);
-			console.log('Subject:', subject || 'No Subject');
-			console.log('Labels:', labels.toLocaleString());
-
-			console.log('-----------------\n');
-		}
-
-		return res.data.messages;
+		return messages;
 	} catch (error) {
 		console.error('Error fetching messages:', error);
 		throw error;

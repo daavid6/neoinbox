@@ -16,6 +16,7 @@ import {
 } from './app/manager/macros/macros.js';
 import { TokenError } from './app/manager/errors/errors.js';
 import { logger } from './app/manager/errors/logger.js';
+import { manageMessage } from './app/manager/gmail/message/message.js';
 
 export const watchRenew = async (req, res) => {
 	res.set('Access-Control-Allow-Origin', '*');
@@ -552,14 +553,21 @@ export const newMessage = async (pubSubEvent, _context) => {
 			updateDocument('users', userRecord.uid, {
 				'watch.historyId': historyId,
 			}),
-			getHistoryListSince(userRecord.uid, oAuth2Client, docData.watch.historyId),
+			getHistoryListSince(oAuth2Client, docData.watch.historyId),
 		]);
 
+		for (const message of messages) {
+			manageMessage(message, userRecord.uid, oAuth2Client);
+		}
+
 		console.log(`Successfully processed messages for ${emailAddress}`);
-		return { messages };
+		return { data: {}, message: ReasonPhrases.OK };
 	} catch (error) {
 		console.error('Error processing Pub/Sub message:', error);
-		throw error;
+		return {
+			error: `Error processing Pub/Sub message:', ${error}`,
+			errorMessage: ReasonPhrases.INTERNAL_SERVER_ERROR,
+		};
 	}
 };
 
