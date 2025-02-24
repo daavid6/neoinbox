@@ -118,7 +118,18 @@
 							</div>
 						}
 						@case (ACTION.Content) {
-							OPCIONES DE Contenido
+							<div class="drive-picker-container">
+								<button mat-raised-button (click)="openPicker(ACTION.Content)">
+									Select Google Drive Folders
+								</button>
+								@if (selectedFolders().length > 0) {
+									<mat-chip-listbox>
+										@for (folder of selectedFolders(); track folder.id) {
+											<mat-chip>{{ folder.name }}</mat-chip>
+										}
+									</mat-chip-listbox>
+								}
+							</div>
 						}
 						@case (ACTION.Summary) {
 							OPCIONES DE Resumen

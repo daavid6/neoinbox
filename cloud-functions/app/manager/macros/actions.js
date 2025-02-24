@@ -62,10 +62,10 @@ export async function executeActions(actions, message, oAuth2Client) {
 	const promises = [];
 
 	if (actions[ActionType.Attachment]) {
-		promises.push(manageAttachment(actions[ActionType.Attachment]));
+		promises.push(manageAttachment(actions[ActionType.Attachment], message, oAuth2Client));
 	}
 	if (actions[ActionType.Content]) {
-		promises.push(manageContent(actions[ActionType.Content]));
+		promises.push(manageContent(actions[ActionType.Content], message, oAuth2Client));
 	}
 	if (actions[ActionType.Summary]) {
 		promises.push(manageSummary(actions[ActionType.Summary]));
@@ -76,28 +76,3 @@ export async function executeActions(actions, message, oAuth2Client) {
 
 	await Promise.all(promises);
 }
-
-// // Check attachments in messagePayload.parts (if they exist)
-// if (message.payload.parts && message.payload.parts.length) {
-// 	for (const part of message.payload.parts) {
-// 		if (!part.filename) continue;
-
-// 		let partBody = part.body;
-
-// 		if (part.body.attachmentId) {
-// 			const res = await gmail.users.messages.attachments.get({
-// 				userId: 'me',
-// 				messageId: message.id,
-// 				id: part.body.attachmentId,
-// 			});
-
-// 			partBody = res.data;
-// 		}
-// 		// console.log('partBody:', partBody);
-// 		// console.log('partBody.data:', partBody.data);
-// 		const bufferObj = Buffer.from(partBody.data, 'base64');
-// 		const decodedData = bufferObj.toString();
-// 		console.log('FileName:', part.filename);
-// 		console.log('Attachment:\n', decodedData);
-// 	}
-// }

@@ -75,6 +75,24 @@ export class DriveService {
 					.setAppId(environment.googleProjectConfig.projectNumber)
 					.build();
 
+			case ACTION.Content:
+				folderView = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+					.setStarred(false)
+					.setIncludeFolders(true)
+					.setSelectFolderEnabled(true)
+					.setMimeTypes('application/vnd.google-apps.folder');
+
+				return new google.picker.PickerBuilder()
+					.setTitle('Select one or more folders')
+					.addView(folderView)
+					.setSelectableMimeTypes('application/vnd.google-apps.folder')
+					.enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+					.setOAuthToken(this.accessToken)
+					.setDeveloperKey(environment.drivePickerApiKey)
+					.setCallback((data) => this.pickerCallback(data))
+					.setAppId(environment.googleProjectConfig.projectNumber)
+					.build();
+
 			default:
 				folderView = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
 					.setStarred(false)
