@@ -1,18 +1,72 @@
 * {
-	margin: 0;
-	padding: 0;
-	box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-	min-height: 100vh;
-	width: 100vw;
-	overflow-x: hidden;
+    min-height: 100vh;
+    width: 100vw;
+    overflow-x: hidden;
 
-	margin: 0;
-	font-family: Roboto, 'Helvetica Neue', sans-serif;
+    margin: 0;
+    font-family: Roboto, 'Helvetica Neue', sans-serif;
 }
 
 html {
-	height: 100%;
+    height: 100%;
+    font-size: 32px;
+}
+
+
+@media (max-width: 3000px) {
+    html {
+        font-size: 24px;
+        /* Reduced font size for smaller screens */
+    }
+}
+
+
+@media (max-width: 2240px) {
+    html {
+        font-size: 20px;
+        /* Reduced font size for smaller screens */
+    }
+}
+
+
+@media (max-width: 1720px) {
+    html {
+        font-size: 16px;
+        /* Reduced font size for smaller screens */
+    }
+}
+
+@media (max-width: 1220px) {
+    html {
+        font-size: 14px;
+        /* Reduced font size for smaller screens */
+    }
+}
+
+@media (max-width: 1040px) {
+    html {
+        font-size: 12px;
+        /* Reduced font size for smaller screens */
+    }
+}
+
+
+@media (max-width: 700px) {
+    html {
+        font-size: 10px;
+        /* Reduced font size for smaller screens */
+    }
+}
+
+@media (max-width: 500px) {
+    html {
+        font-size: 8px;
+        /* Reduced font size for smaller screens */
+    }
 }

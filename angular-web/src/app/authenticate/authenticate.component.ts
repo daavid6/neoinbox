@@ -1,10 +1,14 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatToolbarModule } from '@angular/material/toolbar';
+
 import { AuthService } from '../services/auth.service';
 
 @Component({
 	selector: 'app-authenticate',
-	imports: [],
+	imports: [MatToolbarModule, MatButtonModule, MatIconModule],
 	templateUrl: './authenticate.component.html',
 	styleUrl: './authenticate.component.css',
 })

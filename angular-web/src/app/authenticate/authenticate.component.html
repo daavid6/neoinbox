@@ -1,4 +1,24 @@
-<div class="auth-container">
-    <h1>NeoInbox</h1>
-    <button (click)="login()">Log-in</button>
+<mat-toolbar class="top-toolbar">
+	<span class="logo"><h1>NeoInbox</h1></span>
+	<span class="spacer"></span>
+	<button>Pricing</button>
+	<button>FAQ</button>
+</mat-toolbar>
+
+<div class="page-container">
+	<div class="content-left">
+		<h2>Automate your inbox, reclaim your time</h2>
+		<h3>
+			Transform your inbox into an intelligent workspace with automated workflows that handle
+			routine tasks, streamline communications, and give you back your time so you can focus
+			on what truly matters.
+		</h3>
+		<div class="auth-buttons-container">
+			<button (click)="login()">Log In</button>
+			<button (click)="login()">Sign up</button>
+		</div>
+	</div>
+	<div class="content-right">
+		<img src="assets/illustration.jpg" alt="Illustration" />
+	</div>
 </div>
