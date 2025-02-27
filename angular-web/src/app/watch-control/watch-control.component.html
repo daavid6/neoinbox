@@ -1,21 +1,114 @@
-<div class="watch-control-container">
-	<h1>NeoInbox</h1>
+<mat-toolbar class="top-toolbar">
+	<button class="sidenav-toggle" mat-icon-button (click)="sidenav.toggle()">
+		<mat-icon>menu</mat-icon>
+	</button>
 
-	<div class="buttons-div">
-		<button
-			(click)="enableWatch()"
-			[disabled]="isWatchEnabled"
-			[ngClass]="{ 'disabled-button': isWatchEnabled }"
-		>
-			Enable watch
-		</button>
-		<button (click)="goConfig()">Config</button>
-		<button
-			(click)="disableWatch()"
-			[disabled]="!isWatchEnabled"
-			[ngClass]="{ 'disabled-button': !isWatchEnabled }"
-		>
-			Disable watch
-		</button>
-	</div>
-</div>
+	<span class="logo"><h1>NeoInbox</h1></span>
+
+	<span class="spacer"></span>
+
+	<button mat-mini-fab [matMenuTriggerFor]="userMenu">
+		<mat-icon>account_circle</mat-icon>
+	</button>
+
+	<mat-menu #userMenu="matMenu">
+		<button mat-menu-item>Profile</button>
+		<button mat-menu-item>Settings</button>
+		<mat-divider></mat-divider>
+		<button mat-menu-item>Sign out</button>
+	</mat-menu>
+</mat-toolbar>
+
+<mat-sidenav-container class="sidenav-container">
+	<mat-sidenav #sidenav mode="side" opened class="sidenav">
+		<mat-nav-list>
+			<a routerLinkActive="active-link" class="sidenav-element">
+				<mat-icon>dashboard</mat-icon>
+				<p>Dashboard</p>
+			</a>
+			<a routerLink="/macro-menu" routerLinkActive="active-link" class="sidenav-element">
+				<mat-icon>auto_awesome_motion</mat-icon>
+				<p>Macros</p>
+			</a>
+			<a routerLinkActive="active-link" class="sidenav-element">
+				<mat-icon>insights</mat-icon>
+				<p>Analytics</p>
+			</a>
+			<a routerLinkActive="active-link" class="sidenav-element">
+				<mat-icon>settings</mat-icon>
+				<p>Settings</p>
+			</a>
+		</mat-nav-list>
+	</mat-sidenav>
+
+	<mat-sidenav-content class="content">
+		<div class="dashboard-container">
+			<!-- Status Card -->
+			<mat-card class="status-card">
+				<mat-card-header>
+					<mat-card-title>Service Status</mat-card-title>
+					<div
+						class="status-circle"
+						[ngClass]="{
+							'active': isWatchEnabled && !isWaitingResponse,
+							'inactive': !isWatchEnabled && !isWaitingResponse,
+							'processing': isWaitingResponse
+						}"
+					></div>
+				</mat-card-header>
+
+				<mat-card-content>
+					<mat-slide-toggle
+						[checked]="isWatchEnabled"
+						(change)="toggleWatch($event.checked)"
+						[disabled]="isWaitingResponse"
+					>
+						@if (isWaitingResponse) {
+							<span>
+								<mat-spinner diameter="16" class="inline-spinner"></mat-spinner>
+								Processing...
+							</span>
+						} @else {
+							<span>
+								{{ isWatchEnabled ? 'Watching your inbox' : 'Start watching' }}
+							</span>
+						}
+					</mat-slide-toggle>
+				</mat-card-content>
+			</mat-card>
+
+			<!-- Quick Actions Card -->
+			<mat-card class="actions-card">
+				<mat-card-header>
+					<mat-card-title>Quick Actions</mat-card-title>
+				</mat-card-header>
+				<mat-card-content>
+					<div class="action-buttons">
+						<button routerLink="/macro-menu" mat-raised-button color="primary">
+							<mat-icon>list</mat-icon> View Macros
+						</button>
+						<button mat-raised-button color="accent" routerLink="/macro-create">
+							<mat-icon>add</mat-icon> Create New Macro
+						</button>
+					</div>
+				</mat-card-content>
+			</mat-card>
+
+			<!-- Recent Activity Card -->
+			<mat-card class="activity-card">
+				<mat-card-header>
+					<mat-card-title>Recent Activity</mat-card-title>
+				</mat-card-header>
+				<mat-card-content>
+					<mat-list>
+						<!-- <mat-list-item *ngFor="let activity of recentActivities">
+							<mat-icon matListItemIcon>{{ activity.icon }}</mat-icon>
+							<div matListItemTitle>{{ activity.title }}</div>
+							<div matListItemLine>{{ activity.time }}</div>
+						</mat-list-item> -->
+					</mat-list>
+				</mat-card-content>
+			</mat-card>
+		</div>
+	</mat-sidenav-content>
+</mat-sidenav-container>
