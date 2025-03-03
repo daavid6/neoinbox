@@ -46,7 +46,6 @@
 	flex-direction: column;
 	justify-content: center;
 	padding: 4rem;
-	padding-right: 8rem;
 	color: white;
 }
 
@@ -90,7 +89,7 @@ h3 {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	padding: 2rem;
+	padding: 4rem;
 }
 
 .content-right img {
@@ -98,6 +97,44 @@ h3 {
 	height: auto;
 }
 
+.feature-image {
+	max-width: 80%;
+	height: auto;
+	border-radius: 2rem;
+	box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+	background-color: rgba(255, 255, 255, 0.95);
+	overflow: hidden;
+	transition: all 0.5s ease;
+	filter: brightness(0.95);
+	transform: perspective(1000px) rotateY(-5deg) rotateZ(-2deg);
+	transform-style: preserve-3d;
+
+	/* Add a subtle glowing edge effect */
+	border: 1px solid rgba(246, 182, 214, 0.3);
+
+	/* Replace the floating animation with a subtle pulse */
+	animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+	0%,
+	100% {
+		box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+	}
+
+	50% {
+		box-shadow: 0 15px 35px rgba(246, 182, 214, 0.6);
+	}
+}
+
+.feature-image:hover {
+	transform: perspective(1000px) rotateY(0deg) rotateZ(0deg) translateY(-10px);
+	filter: brightness(1.05);
+	box-shadow: 0 25px 50px rgba(246, 182, 214, 0.7);
+	animation: none;
+	border: 1px solid rgba(246, 182, 214, 0.6);
+}
 
 
 /* General button style*/
@@ -127,6 +164,8 @@ button:active {
 @media (max-width: 500px) {
 	.page-container {
 		flex-direction: column;
+		height: max-content;
+
 	}
 
 	.top-toolbar {
