@@ -18,6 +18,8 @@ import { TokenError } from './app/manager/errors/errors.js';
 import { logger } from './app/manager/errors/logger.js';
 import { manageMessage } from './app/manager/gmail/message/message.js';
 
+import { expressApp } from './server.js';
+
 export const watchRenew = async (req, res) => {
 	res.set('Access-Control-Allow-Origin', '*');
 	res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -571,17 +573,9 @@ export const newMessage = async (pubSubEvent, _context) => {
 	}
 };
 
-functions.http('watchRenew', watchRenew);
-functions.http('watchEnable', watchEnable);
-functions.http('watchDisable', watchDisable);
-functions.http('watchStatus', watchStatus);
+export const api = (req, res) => {
+	return expressApp(req, res);
+};
 
-functions.http('authUrl', authUrl);
-functions.http('authToken', authToken);
-
-functions.http('macroCreate', macroCreate);
-functions.http('macroGet', macroGet);
-functions.http('macroGetAll', macroGetAll);
-functions.http('macroGetAllFiltered', macroGetAllFiltered);
-
+functions.http('api', api);
 functions.cloudEvent('newMessage', newMessage);
