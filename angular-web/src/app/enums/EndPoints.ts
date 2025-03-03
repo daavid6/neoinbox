@@ -1,14 +1,16 @@
+const BASE_URL = 'https://europe-west2-neoinbox.cloudfunctions.net/api';
+
 export enum ENDPOINTS {
 	// Macro
-	createMacro = 'https://europe-west2-neoinbox.cloudfunctions.net/macro-create',
-	getAllMacros = 'https://europe-west2-neoinbox.cloudfunctions.net/macro-get-all',
+	createMacro = `${BASE_URL}/macro-create`,
+	getAllMacros = `${BASE_URL}/macro-get-all`,
 
 	// Auth
-	getAuthURL = 'https://europe-west2-neoinbox.cloudfunctions.net/auth-url',
-	getTokens = 'https://europe-west2-neoinbox.cloudfunctions.net/auth-token',
+	getAuthURL = `${BASE_URL}/auth-url`,
+	getTokens = `${BASE_URL}/auth-token`,
 
 	// Watch
-	enableWatch = 'https://europe-west2-neoinbox.cloudfunctions.net/watch-enable',
-	disableWatch = 'https://europe-west2-neoinbox.cloudfunctions.net/watch-disable',
-	getWatchStatus = 'https://europe-west2-neoinbox.cloudfunctions.net/watch-status',
+	enableWatch = `${BASE_URL}/watch-enable`,
+	disableWatch = `${BASE_URL}/watch-disable`,
+	getWatchStatus = `${BASE_URL}/watch-status`,
 }
