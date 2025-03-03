@@ -52,3 +52,19 @@ export async function uploadAny(fileName, rawData, mimeType, oAuth2Client, paren
 		oAuth2Client,
 	);
 }
+
+/**
+ * Upload HTML content as a Google Doc.
+ */
+export async function uploadHtmlDoc(fileName, rawData, oAuth2Client, parent) {
+	return uploadFile(
+		{
+			fileName,
+			rawData,
+			driveMimeType: 'application/vnd.google-apps.document',
+			mediaMimeType: 'text/html',
+			parent,
+		},
+		oAuth2Client,
+	);
+}
