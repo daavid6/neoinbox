@@ -17,7 +17,7 @@ export async function manageContent(content, message, oAuth2Client) {
 
 	// Check if google-drive array is empty
 	const googleDriveFolders = content['google-drive'];
-	
+
 	if (!googleDriveFolders || googleDriveFolders.length === 0) {
 		// No parent specified, upload file once to the default location
 		await uploadHtmlDoc(`Content_${message.id}`, decodedHtmlData, oAuth2Client);
