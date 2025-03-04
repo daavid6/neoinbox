@@ -68,10 +68,10 @@ export async function executeActions(actions, message, oAuth2Client) {
 		promises.push(manageContent(actions[ActionType.Content], message, oAuth2Client));
 	}
 	if (actions[ActionType.Summary]) {
-		promises.push(manageSummary(actions[ActionType.Summary]));
+		promises.push(manageSummary(actions[ActionType.Summary], message, oAuth2Client));
 	}
 	if (actions[ActionType.Dates]) {
-		promises.push(manageDates(actions[ActionType.Dates]));
+		promises.push(manageDates(actions[ActionType.Dates], message, oAuth2Client));
 	}
 
 	await Promise.all(promises);

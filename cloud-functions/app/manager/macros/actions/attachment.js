@@ -27,10 +27,22 @@ export async function manageAttachment(attachment, message, oAuth2Client) {
 			partBody = res.data;
 		}
 
-		const encodingType = part.headers[3].value;
+		let encodingType = '';
+
+		for (const header of part.headers) {
+			if (header.name === 'Content-Transfer-Encoding') {
+				encodingType = header.value;
+				break;
+			}
+		}
+		console.log('Encodingtype:\n', encodingType);
+
 		const mimeType = part.mimeType;
 
 		const decodedData = Buffer.from(partBody.data, encodingType);
+
+		console.log('DecodedData :\n', decodedData);
+
 		const rawData = Readable.from(decodedData);
 
 		// Check if google-drive array is empty
