@@ -1,45 +1,127 @@
-post https://europe-west2-neoinbox.cloudfunctions.net/watch-renew
+|---- SERVER STATUS ----|
+
+### Check the status of the service
+get https://europe-west2-neoinbox.cloudfunctions.net/api/
+Content-Type: application/json
+
+
+
+
+
+
+
+|---- WATCH MANAGEMENT ----|
+
+### Renew the watch expiration time
+post https://europe-west2-neoinbox.cloudfunctions.net/api/watch-renew
 Content-Type: application/json
 
 {}
 
-###
 
-post https://europe-west2-neoinbox.cloudfunctions.net/watch-enable
+
+### Enable the watch
+post https://europe-west2-neoinbox.cloudfunctions.net/api/watch-enable
 Content-Type: application/json
 
 {
 	"historyId": "4949",
 	"expiration": 1737104318,
-	"userId": "qBzgYJKSW2cAYg0D4WkZZATuDAS2"
+	"userId": "testing_user_id"
 }
 
-###
 
-post https://europe-west2-neoinbox.cloudfunctions.net/watch-disable
+
+### Disable the watch
+post https://europe-west2-neoinbox.cloudfunctions.net/api/watch-disable
 Content-Type: application/json
 
 {
-	"userId": "qBzgYJKSW2cAYg0D4WkZZATuDAS2"
+	"userId": "testing_user_id"
 }
 
-###
 
-get https://europe-west2-neoinbox.cloudfunctions.net/watch-status?userId=qBzgYJKSW2cAYg0D4WkZZATuDAS2
 
-###
+### Check the status of the watch
+get https://europe-west2-neoinbox.cloudfunctions.net/api/watch-status?userId=testing_user_id
 
-post https://europe-west2-neoinbox.cloudfunctions.net/auth-google
+
+
+
+
+
+
+|---- OAUTH MANAGEMENT----|
+
+### Get the Google OAuth URL
+post https://europe-west2-neoinbox.cloudfunctions.net/api/auth-url
 Content-Type: application/json
 
-{}
+{
+	"scopes": [
+		"https://www.googleapis.com/auth/gmail.readonly",
+		"https://www.googleapis.com/auth/userinfo.email"
+	]
+}
 
-###
 
-post https://europe-west2-neoinbox.cloudfunctions.net/auth-token
+
+### Get the Google OAuth token
+post https://europe-west2-neoinbox.cloudfunctions.net/api/auth-token
 Content-Type: application/json
 
 {
   // Introduce the code from the url retrieved by https...auth-google
   "code": "4/0AanRRrsG9hWrQe772Y5EH-O1ufXm9pFIiD1cIJTbupGJUjiVzFQ1IybLVHzfrXt65caIog"
 }
+
+
+
+
+
+
+
+|---- MACROS MANAGEMENT----|
+
+### Create a new macro
+
+post https://europe-west2-neoinbox.cloudfunctions.net/api/macro-create
+Content-Type: application/json
+
+{
+	"userId": "testing_user_id",
+	"name": "Inbox_Attachment_Ideas",
+	"labels": [
+		{
+			"name" : "INBOX",
+			"id" : "INBOX"
+		},
+		{
+			"name" : "UNREAD",
+			"id" : "UNREAD"
+		}
+	],
+	"actionType": "attachment",
+	"service": "google-drive",
+	"remainder": [
+		{
+		"name": "Ideas",
+		"id": "1ruy5kcRrX2ExQepHJbAnF2NcUZCff1pE"
+		}
+	]
+}
+
+
+
+### Get the macro (name) of the user (userId)
+get https://europe-west2-neoinbox.cloudfunctions.net/api/macro-get?userId=testing_user_id&name=Inbox_Attachment_Ideas
+
+
+
+### Get all the macros of the user
+get https://europe-west2-neoinbox.cloudfunctions.net/api/macro-get-all?userId=testing_user_id
+
+
+
+### Get all macros filtered by labels
+get https://europe-west2-neoinbox.cloudfunctions.net/api/macro-get-all-filtered?userId=testing_user_id&labelIds=INBOX,UNREAD
