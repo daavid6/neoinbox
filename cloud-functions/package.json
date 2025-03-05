@@ -38,6 +38,7 @@
 	"homepage": "https://github.com/daavid6/neoinbox#readme",
 	"dependencies": {
 		"@google-cloud/functions-framework": "^3.4.4",
+		"@google/generative-ai": "^0.22.0",
 		"cors": "^2.8.5",
 		"express": "^4.21.2",
 		"firebase-admin": "^13.0.2",

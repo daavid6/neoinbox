@@ -76,9 +76,3 @@ app.use((err, _req, res, _next) => {
 		errorMessage: 'An unexpected error occurred',
 	});
 });
-
-/* Start the server */
-
-// app.listen(port, () => {
-// 	console.log(`NeoInbox API listening on port ${port}`);
-// });
