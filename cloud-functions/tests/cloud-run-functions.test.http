@@ -1,4 +1,4 @@
-|---- SERVER STATUS ----|
+###  |---- SERVER STATUS ----|
 
 ### Check the status of the service
 get https://europe-west2-neoinbox.cloudfunctions.net/api/
@@ -10,7 +10,7 @@ Content-Type: application/json
 
 
 
-|---- WATCH MANAGEMENT ----|
+###  |---- WATCH MANAGEMENT ----|
 
 ### Renew the watch expiration time
 post https://europe-west2-neoinbox.cloudfunctions.net/api/watch-renew
@@ -51,7 +51,7 @@ get https://europe-west2-neoinbox.cloudfunctions.net/api/watch-status?userId=tes
 
 
 
-|---- OAUTH MANAGEMENT----|
+###  |---- OAUTH MANAGEMENT----|
 
 ### Get the Google OAuth URL
 post https://europe-west2-neoinbox.cloudfunctions.net/api/auth-url
@@ -59,8 +59,8 @@ Content-Type: application/json
 
 {
 	"scopes": [
-		"https://www.googleapis.com/auth/gmail.readonly",
-		"https://www.googleapis.com/auth/userinfo.email"
+		"https://www.googleapis.com/auth/calendar.events.freebusy",
+		"https://www.googleapis.com/auth/calendar.calendarlist.readonly"
 	]
 }
 
@@ -71,8 +71,7 @@ post https://europe-west2-neoinbox.cloudfunctions.net/api/auth-token
 Content-Type: application/json
 
 {
-  // Introduce the code from the url retrieved by https...auth-google
-  "code": "4/0AanRRrsG9hWrQe772Y5EH-O1ufXm9pFIiD1cIJTbupGJUjiVzFQ1IybLVHzfrXt65caIog"
+    "code": "4%2F0AQSTgQF1QtGWvcdhGQnp6qSn6FJZCseCjNqgPcNgenEocHb33fF4g8YMLHlmUBfbhtCYsA"
 }
 
 
@@ -81,7 +80,7 @@ Content-Type: application/json
 
 
 
-|---- MACROS MANAGEMENT----|
+###  |---- MACROS MANAGEMENT----|
 
 ### Create a new macro
 
