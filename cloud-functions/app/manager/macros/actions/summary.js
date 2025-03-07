@@ -1,4 +1,4 @@
-import { clearMarkdown, summaryModel } from '../../llm/google.js';
+import { clearMarkdownHtml, summaryModel } from '../../llm/google.js';
 import { uploadHtmlDoc } from './services/google-drive.js';
 
 export async function manageSummary(summary, message, oAuth2Client) {
@@ -19,7 +19,7 @@ export async function manageSummary(summary, message, oAuth2Client) {
 	const output = await summaryModel.generateContent(decodedHtmlData);
 
 	const resposeHtmlData = output.response.text();
-	const rawData = clearMarkdown(resposeHtmlData);
+	const rawData = clearMarkdownHtml(resposeHtmlData);
 
 	// Check if google-drive array is empty
 	const googleDriveFolders = summary['google-drive'];

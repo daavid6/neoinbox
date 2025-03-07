@@ -27,7 +27,12 @@ export class AuthService {
 	 */
 	private async getAuthURL(options: Payload): Promise<string> {
 		// Validate required parameters.
-		if (!options || !options.scopes || !Array.isArray(options.scopes) || options.scopes.length === 0) {
+		if (
+			!options ||
+			!options.scopes ||
+			!Array.isArray(options.scopes) ||
+			options.scopes.length === 0
+		) {
 			throw new Error('Missing required parameter: at least one valid scope is required');
 		}
 
@@ -156,11 +161,63 @@ export class AuthService {
 		return code;
 	}
 
+	/**
+	 * Increments the client permissions to use G Calendar.
+	 */
+	public async incrementCalendarPermissions(): Promise<string> {
+		const url: string = await this.getAuthURL({
+			scopes: [
+				'https://www.googleapis.com/auth/calendar.calendarlist.readonly',
+				'https://www.googleapis.com/auth/calendar.events.freebusy',
+			],
+		});
+
+		// Redirect to the authentication URL.
+		const popup = window.open(url, '_blank', `width=500,height=600,top=100,left=100`);
+
+		if (!popup) throw new Error();
+
+		const code = await new Promise<string>((resolve, reject) => {
+			// Define a message event listener.
+			const handleMessage = async (event: MessageEvent) => {
+				// Optionally validate event.origin to ensure the message comes from a trusted source.
+				if (event.data?.code) {
+					try {
+						// Clean up listener and polling timer.
+						window.removeEventListener('message', handleMessage);
+						clearInterval(pollTimer);
+						// Resolve with the received code (or even proceed with token exchange here)
+						resolve(event.data.code);
+						// Close the popup if it's still open.
+						if (!popup.closed) {
+							popup.close();
+						}
+					} catch (error) {
+						window.removeEventListener('message', handleMessage);
+						clearInterval(pollTimer);
+						reject(error);
+					}
+				}
+			};
+
+			window.addEventListener('message', handleMessage, false);
+
+			// Poll in case the user manually closes the popup before completing auth.
+			const pollTimer = window.setInterval(() => {
+				if (popup.closed) {
+					clearInterval(pollTimer);
+					window.removeEventListener('message', handleMessage);
+					reject(new Error('Authentication popup closed by user'));
+				}
+			}, 500);
+		});
+
+		return code;
+	}
+
 	/*** Functions which exchange a code for tokens. ***/
 
-	public async exchangeCodeForTokens(
-		code: string,
-	): Promise<{ tokens: Tokens; userId: string }> {
+	public async exchangeCodeForTokens(code: string): Promise<{ tokens: Tokens; userId: string }> {
 		try {
 			const response = await firstValueFrom(
 				this.http.post<{ data: { tokens: Tokens; userId: string }; message: string }>(

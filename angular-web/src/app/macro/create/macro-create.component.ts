@@ -1,11 +1,4 @@
-import {
-	ChangeDetectionStrategy,
-	Component,
-	computed,
-	signal,
-	WritableSignal,
-	CUSTOM_ELEMENTS_SCHEMA,
-} from '@angular/core';
+import { Component, computed, signal, WritableSignal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { BreakpointObserver } from '@angular/cdk/layout';
@@ -223,5 +216,10 @@ export class MacroCreateComponent {
 
 		await this.macroService.createMacro(userId, name, labels, actionType, service, remainder);
 		this.router.navigate(['/macro-menu']);
+	}
+
+	//Dates permissions
+	protected async incrementCalendarPermissions() {
+		await this.authService.incrementCalendarPermissions();
 	}
 }
