@@ -1,7 +1,7 @@
 <section class="container">
 	<mat-card class="card" appearance="outlined">
 		<mat-card-header class="card-header">
-			<mat-card-title>Macros</mat-card-title>
+			<mat-card-title><h1>Macros</h1></mat-card-title>
 
 			<button mat-mini-fab (click)="createMacro()" color="primary">
 				<mat-icon>add</mat-icon>
@@ -10,7 +10,7 @@
 
 		<mat-divider class="divider"></mat-divider>
 
-		<mat-card-content>
+		<mat-card-content class="card-content">
 			<table mat-table class="table" [dataSource]="dataSource">
 				<!-- Name Column -->
 				<ng-container matColumnDef="name">

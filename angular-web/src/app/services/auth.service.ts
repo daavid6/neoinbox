@@ -236,8 +236,14 @@ export class AuthService {
 	/*** Functions which manage the authentication state. ***/
 
 	public setTokens(tokens: Tokens): void {
+		// Set in memory
 		this.accessToken$.next(tokens.access_token);
 		this.isloggedIn = true;
+
+		// Store in localStorage
+		localStorage.setItem('accessToken', tokens.access_token);
+		localStorage.setItem('isLoggedIn', 'true');
+		localStorage.setItem('refreshToken', tokens.refresh_token);
 	}
 
 	public getCurrentUserId(): string | null {
@@ -246,10 +252,69 @@ export class AuthService {
 
 	public setUserId(userId: string): void {
 		this.currentUserId = userId;
+		localStorage.setItem('userId', userId);
 	}
 
 	public isLoggedIn(): boolean {
 		return this.isloggedIn;
+	}
+
+	public restoreAuthState(): void {
+		const accessToken = localStorage.getItem('accessToken');
+		const userId = localStorage.getItem('userId');
+
+		if (!accessToken || !userId) return;
+
+		if (this.isTokenExpired()) {
+			try {
+				this.refreshToken();
+			} catch (error) {
+				this.clearSession();
+			}
+		} else {
+			this.accessToken$.next(accessToken);
+			this.currentUserId = userId;
+			this.isloggedIn = true;
+		}
+	}
+
+	public clearSession(): void {
+		localStorage.removeItem('accessToken');
+		localStorage.removeItem('userId');
+		localStorage.removeItem('refreshToken');
+		localStorage.removeItem('isLoggedIn');
+
+		this.accessToken$.next(null);
+		this.currentUserId = null;
+		this.isloggedIn = false;
+	}
+
+	public isTokenExpired(): boolean {
+		const accessToken = localStorage.getItem('accessToken');
+
+		if (!accessToken) return true;
+
+		console.log('Access token:', accessToken);
+
+		return false;
+	}
+
+	public async refreshToken(): Promise<void> {
+		const refreshToken = localStorage.getItem('refreshToken');
+
+		if (!refreshToken) {
+			return Promise.reject(new Error('No refresh token available'));
+		}
+
+		// return firstValueFrom(
+		// 	this.http.post<{ data: { tokens: Tokens }; message: string }>(
+		// 		ENDPOINTS.refreshToken, // You'll need to add this endpoint to your backend
+		// 		{ refresh_token: refreshToken },
+		// 	),
+		// ).then((response) => {
+		// 	this.setTokens(response.data.tokens);
+		// 	return Promise.resolve();
+		// });
 	}
 }
 

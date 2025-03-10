@@ -146,7 +146,11 @@
 							</div>
 						}
 						@case (ACTION.Dates) {
-							OPCIONES DE Fechas
+							<div class="drive-picker-container">
+								<button mat-raised-button (click)="incrementCalendarPermissions()">
+									Give calendar permissions
+								</button>
+							</div>
 						}
 					}
 				</mat-step>

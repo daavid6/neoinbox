@@ -11,23 +11,12 @@
 }
 
 .sidenav-toggle {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-
-	width: 2rem;
-	height: 2rem;
-	background-color: #dedede;
-	border-radius: 15%;
-	box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
-
 	margin-right: 1rem;
-	padding: 0;
 }
 
 .sidenav-toggle .mat-icon {
 	display: flex;
-	color: #303030
+	color: #303030;
 }
 
 .logo h1 {
@@ -38,6 +27,23 @@
 .spacer {
 	flex: 1 1 auto;
 }
+
+.mat-mdc-icon-button {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	width: 2rem;
+	height: 2rem;
+	background-color: #dedede;
+	border-radius: 15%;
+	box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+
+	padding: 0;
+}
+
+
+
 
 /* Side Nav style*/
 
@@ -63,6 +69,7 @@
 
 
 
+
 /* Sidenav content style */
 
 /* Layout */
@@ -73,7 +80,7 @@
 .dashboard-container {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
-	grid-template-rows: repeat(3, 1fr);
+	grid-template-rows: repeat(4, 1fr);
 	gap: 1rem;
 	padding: 2rem;
 	height: calc(100vh - 4rem);
@@ -92,9 +99,9 @@
 	grid-column: span 2 / span 2;
 }
 
-.activity-card {
-	grid-column-start: 2;
-	grid-row-start: 1;
+.macros-preview-card {
+	grid-column-start: 1;
+	grid-row-start: 2;
 	grid-column: span 3 / span 3;
 	grid-row: span 3 / span 3;
 }
@@ -104,12 +111,13 @@
 @media (max-width: 768px) {
 	.dashboard-container {
 		grid-template-columns: repeat(1, 1fr);
-		grid-template-rows: repeat(4, 1fr);
+		grid-template-rows: repeat(5, 1fr);
 	}
 
 	.status-card {
 		grid-column-start: 1;
 		grid-row-start: 1;
+		grid-column: span 1 / span 1;
 	}
 
 	.actions-card {
@@ -123,12 +131,20 @@
 		grid-column-start: 1;
 		grid-row-start: 3;
 		grid-column: span 1 / span 1;
+		grid-row: span 3 / span 3;
 	}
 }
 
 
 
 /* Cards */
+
+.mat-mdc-card {
+	background-color: #d0d0d0;
+	box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.526);
+	border-radius: 0.5rem;
+}
+
 .mat-mdc-card-header {
 	display: flex;
 	justify-content: space-between;
@@ -139,23 +155,19 @@
 	padding-top: 0.75rem;
 	padding-bottom: 0.75rem;
 
-
 	background-color: #8a8a8a;
 	box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.526);
 	border-radius: 0.5rem 0.5rem 0 0;
 	color: white
 }
 
-.mat-mdc-card-title {
-	line-height: 1.5rem;
+.mat-mdc-card-title h2 {
 	font-size: 1.5rem;
+	font-weight: 400;
+	padding: 0;
 }
 
-.mat-mdc-card {
-	background-color: #d0d0d0;
-	box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.526);
-	border-radius: 0.5rem;
-}
+
 
 .mat-mdc-card-content {
 	display: flex;
@@ -212,12 +224,94 @@
 	gap: 16px;
 }
 
-.mat-list-item {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
 /* Active nav link */
 .active {
 	background-color: rgba(255, 255, 255, 0.1);
 	border-left: 4px solid #f6b6d6;
+}
+
+
+.mat-mdc-header-row {
+	background-color: #f6b6d6;
+}
+
+.mat-mdc-row {
+	background-color: rgb(255, 255, 255);
+}
+
+.button-container {
+	display: flex;
+	justify-content: center;
+	width: 140px;
+}
+
+.divider {
+	width: 100%;
+	height: 1px;
+	background-color: #fff;
+}
+
+
+
+
+
+
+.macros-preview-content {
+	display: flex;
+	flex-direction: column;
+	height: calc(100% - 1rem);
+	padding: 1rem;
+	box-sizing: border-box;
+	overflow: hidden;
+}
+
+/* Table container with fixed available space */
+.table-container {
+	flex: 1 1 auto;
+	overflow: auto;
+	min-height: 0;
+	max-height: calc(100% - 4.5rem);
+	border-radius: 8px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	background-color: white;
+	margin-bottom: 1rem;
+}
+
+/* Make paginator fixed height with no growing */
+.paginator {
+	flex: 0 0 auto;
+	/* Do not grow or shrink */
+	height: 3.5rem;
+	border-radius: 8px;
+	background-color: white;
+	margin-top: 0;
+	/* Remove top margin to prevent space issues */
+}
+
+
+/* General button style*/
+.custom-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.75rem 1rem;
+	border-radius: 0.5rem;
+	background-color: #ffee69;
+	gap: 0.5rem;
+	color: rgb(0, 0, 0);
+	font-size: 1rem;
+	font-weight: 300;
+	border: none;
+	cursor: pointer;
+	transition: all 0.3s ease;
+}
+
+.custom-button:hover {
+	background-color: #f6b6d6;
+	transform: scale(1.05);
+}
+
+.custom-button:active {
+	background-color: #ff85c1;
+	transform: scale(0.95);
 }
