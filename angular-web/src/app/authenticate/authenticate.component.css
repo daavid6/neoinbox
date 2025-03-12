@@ -1,14 +1,24 @@
-/* Top toolbar with title and buttons */
+:host {
+	/* Layout */
+	--top-toolbar-height: 4rem;
+
+	/* Typography */
+	--heading-font: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+}
+
+
+/* ----- Toolbar ----- */
 .top-toolbar {
+	display: flex;
+	align-items: center;
+	height: var(--top-toolbar-height);
+	padding: 0.5rem 4rem;
+	gap: 1rem;
+
+	color: white;
+	border-bottom: 1px solid rgba(100, 100, 100, 0.85);
 	background: linear-gradient(to right, rgba(100, 100, 100, 0.85), rgba(100, 100, 100, 0.65));
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-	color: white;
-	display: flex;
-	height: 4rem;
-	align-items: center;
-	padding: 0.5rem 4rem;
-	border-bottom: 1px solid rgba(100, 100, 100, 0.85);
-	gap: 1rem;
 }
 
 .top-toolbar h1 {
@@ -16,58 +26,56 @@
 	font-weight: 1000;
 }
 
-/* Spacer */
-.spacer {
-	flex: 1 1 auto;
-}
-
 .top-toolbar button {
 	min-width: 10rem;
 }
 
-
-
-
-
-/* Page container with two sections */
-.page-container {
-	display: flex;
-	height: calc(100vh - 4rem);
-	/* subtract toolbar height */
-	background: linear-gradient(to right, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.65));
-	flex-direction: row;
+.spacer {
+	flex: 1 1 auto;
 }
 
 
-/* Left content: Title, subtitle, buttons */
+/* ----- Main Container ----- */
+.page-container {
+	display: flex;
+	flex-direction: row;
+	height: calc(100vh - var(--top-toolbar-height));
+	background: linear-gradient(to right, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.65));
+}
+
+
+/* ----- Left Content Section ----- */
 .content-left {
 	flex: 4;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	padding: 4rem;
+
 	color: white;
 }
 
 h2 {
-	text-align: left;
+	font-family: var(--heading-font);
 	font-size: 4rem;
-	color: #f6b6d6;
 	font-weight: 1000;
 	line-height: 0.9;
+	text-align: left;
+
 	margin-bottom: 3rem;
-	font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI",
-		Roboto;
+
+	color: #f6b6d6;
 }
 
 h3 {
-	text-align: left;
+	font-family: var(--heading-font);
 	font-size: 1.2rem;
-	color: #ffffff;
 	font-weight: 800;
+	text-align: left;
+
 	margin-bottom: 3rem;
-	font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI",
-		Roboto;
+
+	color: white;
 }
 
 .auth-buttons-container {
@@ -81,9 +89,7 @@ h3 {
 }
 
 
-
-
-/* Right content: Image */
+/* ----- Right Content Section ----- */
 .content-right {
 	flex: 3;
 	display: flex;
@@ -100,19 +106,17 @@ h3 {
 .feature-image {
 	max-width: 80%;
 	height: auto;
+
 	border-radius: 2rem;
-	box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
 	background-color: rgba(255, 255, 255, 0.95);
+	border: 1px solid rgba(246, 182, 214, 0.3);
 	overflow: hidden;
+
+	filter: brightness(0.95) drop-shadow(0 15px 30px rgba(0, 0, 0, 0.5));
+
 	transition: all 0.5s ease;
-	filter: brightness(0.95);
 	transform: perspective(1000px) rotateY(-5deg) rotateZ(-2deg);
 	transform-style: preserve-3d;
-
-	/* Add a subtle glowing edge effect */
-	border: 1px solid rgba(246, 182, 214, 0.3);
-
-	/* Replace the floating animation with a subtle pulse */
 	animation: pulse 4s ease-in-out infinite;
 }
 
@@ -120,57 +124,58 @@ h3 {
 
 	0%,
 	100% {
-		box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+		box-shadow: 0 15px 30px rgba(246, 182, 214, 0.4);
+		transform: perspective(1000px) rotateY(-5deg) rotateZ(-2deg) translateY(0);
+
 	}
 
 	50% {
-		box-shadow: 0 15px 35px rgba(246, 182, 214, 0.6);
+		box-shadow: 0 15px 35px rgba(246, 182, 214, 1);
+		transform: perspective(1000px) rotateY(2deg) rotateZ(0deg) translateY(-10px);
 	}
 }
 
-.feature-image:hover {
-	transform: perspective(1000px) rotateY(0deg) rotateZ(0deg) translateY(-10px);
-	filter: brightness(1.05);
-	box-shadow: 0 25px 50px rgba(246, 182, 214, 0.7);
-	animation: none;
-	border: 1px solid rgba(246, 182, 214, 0.6);
-}
 
-
-/* General button style*/
+/* ----- Buttons ----- */
 button {
 	padding: 0.75rem 1.5rem;
-	border-radius: 0.5rem;
-	background-color: #ffee69;
-	color: rgb(0, 0, 0);
+
 	font-size: 1rem;
 	font-weight: 600;
+
+	background-color: #ffee69;
+	color: black;
+	border-radius: 0.5rem;
 	border: none;
+
 	cursor: pointer;
 	transition: all 0.3s ease;
 }
 
 button:hover {
-	background-color: #ff85c1;
+	background-color: #f6b6d6;
 	transform: scale(1.05);
 }
 
 button:active {
-	background-color: #ff4a8d;
+	background-color: #ff85c1;
 	transform: scale(0.95);
 }
 
 
+/* ----- Media Queries ----- */
 @media (max-width: 500px) {
+	.top-toolbar {
+		flex-wrap: wrap;
+		justify-content: space-evenly;
+		height: auto;
+		padding: 0.5rem;
+	}
+
 	.page-container {
 		flex-direction: column;
 		height: max-content;
 
-	}
-
-	.top-toolbar {
-		flex-wrap: wrap;
-		justify-content: space-evenly;
 	}
 
 	.spacer {
@@ -181,10 +186,7 @@ button:active {
 		padding: 4rem;
 	}
 
-	h2 {
-		text-align: center;
-	}
-
+	h2,
 	h3 {
 		text-align: center;
 	}
@@ -198,14 +200,4 @@ button:active {
 	.auth-buttons-container button {
 		min-width: fit-content;
 	}
-
-	.top-toolbar {
-		flex-wrap: wrap;
-		justify-content: space-evenly;
-		height: auto;
-		/* Adjust height to fit content */
-		padding: 0.5rem;
-		/* Reduce padding */
-	}
-
 }

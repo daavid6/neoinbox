@@ -25,17 +25,31 @@ export class AuthenticateComponent {
 		}
 	}
 
-	protected async login() {
+	private async authenticate() {
 		try {
+			// Initiate Google authentication flow getting the code
 			const code = await this.authService.initiateGoogleAuth();
-			const { tokens, userId } = await this.authService.exchangeCodeForTokens(code);
 
-			this.authService.setTokens(tokens);
+			// Validate the code, uptade or create user data and get the user ID and tokens
+			const { userId, tokens } = await this.authService.validateCode(code);
+
+			// Set tokens for the current session
 			this.authService.setUserId(userId);
+			this.authService.setTokens(tokens);
+
+			// Start navigation immediately
 			this.router.navigate(['/watch-control']);
 		} catch (error) {
-			console.error('Login failed:', error);
+			console.error('Authentication failed:', error);
 			this.router.navigate(['/authenticate']);
 		}
+	}
+
+	protected logIn() {
+		return this.authenticate();
+	}
+
+	protected signUp() {
+		return this.authenticate();
 	}
 }
