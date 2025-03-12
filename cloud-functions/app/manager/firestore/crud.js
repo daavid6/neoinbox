@@ -135,7 +135,7 @@ export async function deleteDocument(collection, docId) {
  *
  * @param {string} collection - The name of the Firestore collection.
  * @param {string} docId - The ID of the document to check.
- * @returns {boolean} - True if the document exists, false otherwise.
+ * @returns {Promise<boolean>} - True if the document exists, false otherwise.
  * @throws {UnexpectedError} - If an unexpected error occurs during the process.
  */
 export async function existsDoc(collection, docId) {
