@@ -1,34 +1,35 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { NgClass } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { RouterLink } from '@angular/router';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-
-import { ViewChild } from '@angular/core';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatDividerModule } from '@angular/material/divider';
-
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MacroService } from '../services/macro.service';
-import { Macro } from '../interfaces/Macro';
 
+import { MacroService } from '../services/macro.service';
 import { WatchGmailService } from '../services/watch-gmail.service';
 import { AuthService } from '../services/auth.service';
 
+import { Macro } from '../interfaces/Macro';
+
+// Constants
 const DEFAULT_MACROS_PER_PAGE = 4;
 
 @Component({
 	selector: 'app-watch-control',
 	imports: [
 		NgClass,
+		RouterLink,
+
 		MatToolbarModule,
 		MatButtonModule,
 		MatIconModule,
@@ -36,32 +37,32 @@ const DEFAULT_MACROS_PER_PAGE = 4;
 		MatListModule,
 		MatCardModule,
 		MatMenuModule,
-
 		MatTableModule,
 		MatDividerModule,
 		MatPaginatorModule,
-
 		MatSlideToggleModule,
-		RouterLink,
 		MatProgressSpinnerModule,
 	],
 	templateUrl: './watch-control.component.html',
 	styleUrl: './watch-control.component.css',
 })
-export class WatchControlComponent {
-	protected isWatchEnabled: boolean = false;
-	protected isWaitingResponse: boolean = false;
+export class WatchControlComponent implements OnInit {
+	// ---- Authentication state ----
 	private userId: string | null = null;
 
-	private currentUserId: string = '';
+	// ---- Watch status state ----
+	protected isWatchEnabled: boolean = false;
+	protected isWaitingResponse: boolean = false;
+
+	// ---- Macro data state ----
 	private currentMacros: Macro[] = [];
 	private parsedMacros: object[] = [];
 
-	// Paginator variables
+	// ---- Table UI state ----
 	protected displayedColumns: string[] = ['name', 'labels', 'type', 'service'];
 	protected dataSource = new MatTableDataSource<object>([]);
-	private array: object[] = [];
 
+	// ---- Paginator variables ----
 	protected pageSize = DEFAULT_MACROS_PER_PAGE;
 	protected pageSizeOptions: number[] = [1, 2, 4, 6];
 	protected length = 0;
@@ -73,44 +74,79 @@ export class WatchControlComponent {
 		private watchGmailService: WatchGmailService,
 		private authService: AuthService,
 		private router: Router,
-
 		private macroService: MacroService,
 	) {}
 
 	async ngOnInit() {
-		if (!this.authService.isLoggedIn() || !this.authService.getCurrentUserId()) {
+		if (!this.checkAuthentication()) {
 			this.router.navigate(['/authenticate']);
 			return;
 		}
-		this.userId = this.authService.getCurrentUserId();
-		this.isWatchEnabled = await this.watchGmailService.isWatchEnabled(this.userId as string);
 
 		try {
-			this.currentUserId = this.authService.getCurrentUserId() || '';
-			this.currentMacros = (await this.macroService.getAllMacros(this.currentUserId)) ?? [];
-
-			this.parsedMacros = this.currentMacros.map((macro: Macro) => ({
-				name: macro.data.name,
-				labels: macro.data.labels.map((label) => label.name),
-				type: macro.data.action.type,
-				service: macro.data.action.service,
-			}));
-
-			// Update data source and UI
-			this.length = this.parsedMacros.length;
-			this.dataSource = new MatTableDataSource(this.parsedMacros);
-			this.dataSource.paginator = this.paginator;
+			await Promise.all([this.initializeWatchStatus(), this.loadMacroData()]);
 		} catch (error) {
 			console.error('Error initializing component:', error);
 		}
 	}
 
-	protected signOut() {
+	// ---- Initializer methods ----
+
+	/**
+	 * Check if user is authenticated, redirect if not
+	 * @returns false if not logged-in or user id is not set
+	 */
+	private checkAuthentication(): boolean {
+		this.userId = this.authService.getUserId() || '';
+		return this.authService.isLoggedIn() && !!this.userId;
+	}
+
+	/**
+	 * Check if watch is enabled for the current user
+	 */
+	private async initializeWatchStatus(): Promise<void> {
+		if (!this.userId) return;
+		this.isWatchEnabled = await this.watchGmailService.isWatchEnabled(this.userId);
+	}
+
+	/**
+	 * Load and process macro data
+	 */
+	private async loadMacroData(): Promise<void> {
+		if (!this.userId) return;
+
+		// Fetch macro data
+		this.currentMacros = (await this.macroService.getAllMacros(this.userId)) ?? [];
+
+		// Process data for display
+		this.parsedMacros = this.currentMacros.map((macro: Macro) => ({
+			name: macro.data.name,
+			labels: macro.data.labels.map((label) => label.name),
+			type: macro.data.action.type,
+			service: macro.data.action.service,
+		}));
+
+		// Update data source and UI
+		this.length = this.parsedMacros.length;
+		this.dataSource = new MatTableDataSource(this.parsedMacros);
+		this.dataSource.paginator = this.paginator;
+	}
+
+	// ---- UI event handlers ----
+
+	/**
+	 * Sign out the current user
+	 */
+	protected signOut(): void {
 		this.authService.clearSession();
 		this.router.navigate(['/authenticate']);
 	}
 
-	protected async toggleWatch(enabled: boolean) {
+	/**
+	 * Toggle watch status
+	 * @param enabled New watch status
+	 */
+	protected async toggleWatch(enabled: boolean): Promise<void> {
 		if (this.isWaitingResponse) return;
 
 		this.isWaitingResponse = true;
@@ -124,6 +160,8 @@ export class WatchControlComponent {
 			}
 		} catch (error) {
 			console.error('Error toggling watch:', error);
+
+			// Revert UI to previous state on error
 			setTimeout(() => {
 				this.isWatchEnabled = previousState;
 			}, 200);
@@ -132,7 +170,10 @@ export class WatchControlComponent {
 		}
 	}
 
-	private async enableWatch() {
+	/**
+	 * Enable Gmail watch
+	 */
+	private async enableWatch(): Promise<void> {
 		try {
 			this.isWatchEnabled = true;
 			await this.watchGmailService.watchGmail();
@@ -142,7 +183,10 @@ export class WatchControlComponent {
 		}
 	}
 
-	private async disableWatch() {
+	/**
+	 * Disable Gmail watch
+	 */
+	private async disableWatch(): Promise<void> {
 		try {
 			this.isWatchEnabled = false;
 			await this.watchGmailService.unWatchGmail();
@@ -152,14 +196,18 @@ export class WatchControlComponent {
 		}
 	}
 
-	// Reacts to paginator events
-	protected handlePage(event: PageEvent) {
+	/**
+	 * Handle paginator events
+	 */
+	protected handlePage(event: PageEvent): void {
 		this.pageSize = event.pageSize;
 		this.index = event.pageIndex;
 	}
 
-	// Redirect to the macro creation page
-	protected createMacro() {
+	/**
+	 * Navigate to macro creation page
+	 */
+	protected createMacro(): void {
 		this.router.navigate(['/macro-create']);
 	}
 }
