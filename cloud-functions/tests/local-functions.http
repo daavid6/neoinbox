@@ -1,0 +1,127 @@
+###  |---- SERVER STATUS ----|
+
+### Check the status of the service
+get http://localhost:5001/
+Content-Type: application/json
+
+
+
+
+
+
+
+###  |---- WATCH MANAGEMENT ----|
+
+### Renew the watch expiration time
+post http://localhost:5001/watch-renew
+Content-Type: application/json
+
+{}
+
+
+
+### Enable the watch
+post http://localhost:5001/watch-enable
+Content-Type: application/json
+
+{
+	"historyId": "4949",
+	"expiration": 1737104318,
+	"userId": "testing_user_id"
+}
+
+
+
+### Disable the watch
+post http://localhost:5001/watch-disable
+Content-Type: application/json
+
+{
+	"userId": "testing_user_id"
+}
+
+
+
+### Check the status of the watch
+get http://localhost:5001/watch-status?userId=UZK3zTcEA6gPW6ymfqCJor6agKa2
+
+
+
+
+
+
+
+###  |---- OAUTH MANAGEMENT----|
+
+### Get the Google OAuth URL
+post http://localhost:5001/auth-url
+Content-Type: application/json
+
+{
+	"scopes": [
+		"https://www.googleapis.com/auth/gmail.readonly",
+		"https://www.googleapis.com/auth/userinfo.email"
+	]
+}
+
+
+
+### Get the Google OAuth token
+post http://localhost:5001/auth-token
+Content-Type: application/json
+
+{
+    "code": "4/0AQSTgQFCJP86XeA56reOokvV_tTqDfQw4I-Ja7BuxFDE1pecElmvwn2z2GWAULwt4-hnzw"
+}
+
+
+
+
+
+
+
+
+###  |---- MACROS MANAGEMENT----|
+
+### Create a new macro
+
+post http://localhost:5001/macro-create
+Content-Type: application/json
+
+{
+	"userId": "testing_user_id",
+	"name": "Inbox_Attachment_Ideas",
+	"labels": [
+		{
+			"name" : "INBOX",
+			"id" : "INBOX"
+		},
+		{
+			"name" : "UNREAD",
+			"id" : "UNREAD"
+		}
+	],
+	"actionType": "attachment",
+	"service": "google-drive",
+	"remainder": [
+		{
+		"name": "Ideas",
+		"id": "1ruy5kcRrX2ExQepHJbAnF2NcUZCff1pE"
+		}
+	]
+}
+
+
+
+### Get the macro (name) of the user (userId)
+get http://localhost:5001/macro-get?userId=testing_user_id&name=Inbox_Attachment_Ideas
+
+
+
+### Get all the macros of the user
+get http://localhost:5001/macro-get-all?userId=testing_user_id
+
+
+
+### Get all macros filtered by labels
+get http://localhost:5001/macro-get-all-filtered?userId=testing_user_id&labelIds=INBOX,UNREAD

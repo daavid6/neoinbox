@@ -76,3 +76,13 @@ app.use((err, _req, res, _next) => {
 		errorMessage: 'An unexpected error occurred',
 	});
 });
+
+// Configure the port - use environment variable or fall back to a default
+const PORT = 5001;
+
+// Only start the server if this file is run directly.
+if (process.argv[1] === import.meta.filename) {
+	app.listen(PORT, () => {
+		console.log(`NeoInbox API server running on port ${PORT}`);
+	});
+}

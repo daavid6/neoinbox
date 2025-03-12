@@ -1,4 +1,5 @@
-const BASE_URL = 'https://europe-west2-neoinbox.cloudfunctions.net/api';
+// const BASE_URL = 'https://europe-west2-neoinbox.cloudfunctions.net/api';
+const BASE_URL = 'http://localhost:5001';
 
 export enum ENDPOINTS {
 	// Macro
@@ -7,7 +8,7 @@ export enum ENDPOINTS {
 
 	// Auth
 	getAuthURL = `${BASE_URL}/auth-url`,
-	getTokens = `${BASE_URL}/auth-token`,
+	validateCode = `${BASE_URL}/auth-token`,
 
 	// Watch
 	enableWatch = `${BASE_URL}/watch-enable`,
