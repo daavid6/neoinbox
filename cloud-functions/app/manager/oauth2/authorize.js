@@ -2,19 +2,20 @@ import { google } from 'googleapis';
 import { Timestamp } from 'firebase-admin/firestore';
 import { createRequire } from 'module';
 
-import { createDocument, existsDoc, updateDocument, readDocument } from '../firestore/crud.js';
+import { createDocument, updateDocument, readDocument, existsDoc } from '../firestore/crud.js';
 import { firebaseAuth } from '../firestore/firebase.js';
 import {
 	RequiredVariableError,
 	UnexpectedError,
 	TokenError,
 	DocumentNotFound,
-	DocumentAlreadyExists,
 } from '../errors/errors.js';
 import { logger } from '../errors/logger.js';
 
 const require = createRequire(import.meta.url);
 const basicUserOAuthCredentials = require('../../private/service_accounts/basic-user-oAuthClient.json');
+
+// OAuth2
 
 export function getOAuthClient() {
 	return new google.auth.OAuth2(
@@ -73,6 +74,234 @@ export async function getOAuthClientOf(userId) {
 	}
 }
 
+// Google Login
+
+/**
+ * Validates an authorization code and retrieves user data.
+ *
+ * This function exchanges the provided authorization code for an OAuth2 token,
+ * retrieves user data using the token, and saves the user data to Firestore.
+ *
+ * @param {string} code - The authorization code to validate.
+ * @returns {Promise<Object>} - A promise that resolves to an object containing the token and userId.
+ * @throws {RequiredVariableError} - If the code parameter is missing.
+ * @throws {TokenError} - If the token exchange fails or no token is received.
+ * @throws {ReferenceError} - If no refresh token is received or if user data retrieval fails.
+ * @throws {UnexpectedError} - If an unexpected error occurs during the process.
+ */
+export async function validateCode(code) {
+	if (!code) {
+		logger.error('Missing code parameter');
+		throw new RequiredVariableError({ code });
+	}
+
+	try {
+		// Exchange auth code for tokens object
+		const tokens = await exchangeCodeForToken(code);
+
+		if (!tokens?.refresh_token) {
+			logger.error(`No refresh token received from OAuth exchange with code ${code}`);
+			throw new ReferenceError('No refresh token received from OAuth exchange');
+		}
+
+		// Get user info from Google OAuth2
+		const oAuth2Client = getOAuthClient();
+		oAuth2Client.setCredentials(tokens);
+		const googleUserInfo = await getGoogleUserInfo(oAuth2Client);
+
+		// Get the user record from Firebase Auth by email or create a new one
+		const firebaseUserRecord = await getOrCreateFirebaseUserByEmail(googleUserInfo);
+
+		// Save new refresh token to Firestore and create user if not exists
+		await updateOrCreateFirestoreUser(firebaseUserRecord.uid, tokens.refresh_token);
+
+		return { tokens, userId: firebaseUserRecord.uid };
+	} catch (error) {
+		logger.error(`Failed to validate the code: ${code}:`, error);
+		throw error;
+	}
+}
+
+/**
+ * Exchanges an authorization code for an OAuth2 token.
+ *
+ * This function decodes the provided authorization code and exchanges it for an OAuth2 token.
+ * If the token exchange fails or no token is received, an error is thrown.
+ *
+ * @param {string} code - The authorization code to exchange for a token.
+ * @returns {Promise<Object>} - A promise that resolves to the OAuth2 token.
+ * @throws {RequiredVariableError} - If the code parameter is missing.
+ * @throws {TokenError} - If the token exchange fails or no token is received.
+ * @throws {UnexpectedError} - If an unexpected error occurs during the process.
+ *
+ */
+async function exchangeCodeForToken(code) {
+	if (!code) {
+		logger.error('Missing code parameter');
+		throw new RequiredVariableError({ code });
+	}
+
+	const oAuth2Client = getOAuthClient();
+
+	try {
+		const decodedCode = decodeURIComponent(code);
+		const token = await new Promise((resolve, reject) => {
+			oAuth2Client.getToken(decodedCode, (err, token) => {
+				if (err) {
+					logger.error('Token exchange failed:', err);
+					reject(new TokenError(`Failed to exchange code: ${err.message}`));
+					return;
+				}
+				if (!token) {
+					logger.error(`No token received from OAuth2Client: ${oAuth2Client}`);
+					reject(
+						new ReferenceError(`No token received from OAuth2Client: ${oAuth2Client}`),
+					);
+					return;
+				}
+				resolve(token);
+			});
+		});
+
+		return token;
+	} catch (error) {
+		logger.error(`Failed to get Tokens from code: ${code}`, {
+			error: error.message,
+			stack: error.stack,
+		});
+
+		switch (error.constructor) {
+			case TokenError:
+			case ReferenceError:
+				throw error;
+			default:
+				logger.error('Unexpected error during token exchange:', error);
+				throw new UnexpectedError(
+					`Unexpected error during token exchange: ${error.message}`,
+				);
+		}
+	}
+}
+
+/**
+ * Retrieves user information using an OAuth2 client.
+ *
+ * This function fetches user information from Google OAuth2 using the provided OAuth2 client.
+ * If the OAuth2 client is missing or the user information cannot be retrieved, an error is thrown.
+ *
+ * @param {google.auth.OAuth2} oAuth2Client - The OAuth2 client to use for fetching user information.
+ * @returns {Promise<Object>} - A promise that resolves to the user information.
+ * @throws {RequiredVariableError} - If the oAuth2Client parameter is missing.
+ * @throws {ReferenceError} - If no user information is received from Google OAuth2.
+ * @throws {UnexpectedError} - If an unexpected error occurs during the process.
+ */
+async function getGoogleUserInfo(oAuth2Client) {
+	if (!oAuth2Client) {
+		logger.error('Missing OAuth2 client');
+		throw new RequiredVariableError({ oAuth2Client });
+	}
+
+	try {
+		const oauth2 = google.oauth2({
+			auth: oAuth2Client,
+			version: 'v2',
+		});
+
+		const res = await oauth2.userinfo.get();
+
+		if (!res?.data) {
+			throw new ReferenceError('No user info received from Google OAuth2');
+		}
+
+		return res.data;
+	} catch (error) {
+		logger.error(`Failed to get user info from oAuth2Client: ${oAuth2Client}:`, {
+			error: error.message,
+			stack: error.stack,
+		});
+
+		switch (error.constructor) {
+			case ReferenceError:
+				throw error;
+			default:
+				logger.error('Unexpected error during getUserInfo:', error);
+				throw new UnexpectedError(`Unexpected error during getUserInfo: ${error.message}`);
+		}
+	}
+}
+
+/**
+ * Gets a user record by email, creating the user if they don't exist
+ *
+ * @param {Object} userInfo - User information containing email, name, and optional picture
+ * @param {string} userInfo.email - The user's email address
+ * @param {string} userInfo.name - The user's display name
+ * @param {string} [userInfo.picture] - URL to the user's profile picture
+ * @returns {Promise<Object>} Firebase user record
+ * @throws {UnexpectedError} If Firebase operations fail for reasons other than user not found
+ */
+async function getOrCreateFirebaseUserByEmail(userInfo) {
+	if (!userInfo?.email) {
+		logger.error('Missing email in userInfo');
+		throw new RequiredVariableError({ userInfo });
+	}
+
+	try {
+		// First try to get the existing user
+		return await firebaseAuth.getUserByEmail(userInfo.email);
+	} catch (error) {
+		// If the user doesn't exist, create them
+		if (error.code === 'auth/user-not-found') {
+			return await firebaseAuth.createUser({
+				email: userInfo.email,
+				displayName: userInfo.name,
+				photoURL: userInfo.picture,
+			});
+		}
+
+		// For any other error, log and throw
+		logger.error('Unexpected error while getting/creating user:', error);
+		throw new UnexpectedError(`Failed to get or create user: ${error.message}`);
+	}
+}
+
+/**
+ * Updates an existing user's refresh token or creates a new user in Firestore if they don't exist
+ *
+ * @param {string} userId - The Firebase user ID
+ * @param {string} refreshToken - The OAuth2 refresh token to store
+ * @returns {Promise<void>}
+ * @throws {UnexpectedError} If Firestore operations fail
+ */
+async function updateOrCreateFirestoreUser(userId, refreshToken) {
+	if (!userId) {
+		logger.error('Missing userId parameter');
+		throw new RequiredVariableError({ userId });
+	}
+
+	if (!refreshToken) {
+		logger.error('Missing refreshToken parameter');
+		throw new RequiredVariableError({ refreshToken });
+	}
+
+	try {
+		// Check if user exists in Firestore
+		const exists = await existsDoc('users', userId);
+
+		if (exists) {
+			// User already exists
+			await updateDocument('users', userId, { refresh_token: refreshToken });
+		} else {
+			// New user
+			const { userData } = formatUserData(userId, refreshToken);
+			await createDocument('users', userId, userData);
+		}
+	} catch (error) {
+		logger.error('Unexpected error during updateOrCreateUserInFirestore:', error);
+		throw new UnexpectedError(`Failed to update or create user: ${error.message}`);
+	}
+}
+
 /**
  * Formats user data for storage.
  *
@@ -112,292 +341,6 @@ function formatUserData(
 			refresh_token: refreshToken,
 		},
 	};
-}
-
-// Google Login
-
-/**
- * Validates an authorization code and retrieves user data.
- *
- * This function exchanges the provided authorization code for an OAuth2 token,
- * retrieves user data using the token, and saves the user data to Firestore.
- *
- * @param {string} code - The authorization code to validate.
- * @returns {Promise<Object>} - A promise that resolves to an object containing the token and userId.
- * @throws {RequiredVariableError} - If the code parameter is missing.
- * @throws {TokenError} - If the token exchange fails or no token is received.
- * @throws {ReferenceError} - If no refresh token is received or if user data retrieval fails.
- * @throws {UnexpectedError} - If an unexpected error occurs during the process.
- */
-export async function validateCode(code) {
-	if (!code) {
-		logger.error('Missing code parameter');
-		throw new RequiredVariableError({ code });
-	}
-
-	try {
-		const oAuth2Client = getOAuthClient();
-
-		const tokens = await exchangeCodeForToken(code, oAuth2Client);
-
-		if (!tokens?.refresh_token) {
-			logger.error(`No refresh token received from OAuth exchange with code ${code}`);
-			throw new ReferenceError('No refresh token received from OAuth exchange');
-		}
-
-		oAuth2Client.setCredentials(tokens);
-
-		const { userId, userData } = await getUserData(tokens.refresh_token, oAuth2Client);
-
-		if (!userId || !userData) {
-			logger.error(
-				`Failed to get valid userData or userId with refreshToken: ${tokens.refresh_token}`,
-			);
-			throw new ReferenceError(
-				`Failed to get valid userData: ${userData} or userId: ${userId}`,
-			);
-		}
-
-		await saveUserData(userId, userData);
-
-		return { tokens, userId };
-	} catch (error) {
-		logger.error(`Failed to validate the code: ${code}:`, {
-			error: error.message,
-			stack: error.stack,
-		});
-
-		switch (error.constructor) {
-			case RequiredVariableError:
-			case TokenError:
-			case ReferenceError:
-			case UnexpectedError:
-				throw error;
-			default:
-				logger.error('Unexpected error during validateCode:', error);
-				throw new UnexpectedError(`Unexpected error during validateCode: ${error.message}`);
-		}
-	}
-}
-
-/**
- * Retrieves user information using an OAuth2 client.
- *
- * This function fetches user information from Google OAuth2 using the provided OAuth2 client.
- * If the OAuth2 client is missing or the user information cannot be retrieved, an error is thrown.
- *
- * @param {google.auth.OAuth2} oAuth2Client - The OAuth2 client to use for fetching user information.
- * @returns {Promise<Object>} - A promise that resolves to the user information.
- * @throws {RequiredVariableError} - If the oAuth2Client parameter is missing.
- * @throws {ReferenceError} - If no user information is received from Google OAuth2.
- * @throws {UnexpectedError} - If an unexpected error occurs during the process.
- */
-async function getUserInfo(oAuth2Client) {
-	if (!oAuth2Client) {
-		logger.error('Missing OAuth2 client');
-		throw new RequiredVariableError({ oAuth2Client });
-	}
-
-	try {
-		const oauth2 = google.oauth2({
-			auth: oAuth2Client,
-			version: 'v2',
-		});
-
-		const res = await oauth2.userinfo.get();
-
-		if (!res?.data) {
-			throw new ReferenceError('No user info received from Google OAuth2');
-		}
-
-		return res.data;
-	} catch (error) {
-		logger.error(`Failed to get user info from oAuth2Client: ${oAuth2Client}:`, {
-			error: error.message,
-			stack: error.stack,
-		});
-
-		switch (error.constructor) {
-			case ReferenceError:
-				throw error;
-			default:
-				logger.error('Unexpected error during getUserInfo:', error);
-				throw new UnexpectedError(`Unexpected error during getUserInfo: ${error.message}`);
-		}
-	}
-}
-
-/**
- * Saves user data to Firestore.
- *
- * This function checks if a user document exists in Firestore. If it exists, the document is updated.
- * If it does not exist, a new document is created.
- *
- * @param {string} userId - The ID of the user whose data is to be saved.
- * @param {Object} userData - The user data to be saved.
- * @throws {RequiredVariableError} - If the userId or userData parameter is missing.
- * @throws {UnexpectedError} - If an unexpected error occurs during the process.
- */
-async function saveUserData(userId, userData) {
-	if (!userId) {
-		logger.error('Missing userId parameter');
-		throw new RequiredVariableError({ userId });
-	}
-
-	if (!userData) {
-		logger.error('Missing userData parameter');
-		throw new RequiredVariableError({ userData });
-	}
-
-	try {
-		const exists = existsDoc('users', userId);
-
-		if (!exists) await createDocument('users', userId, userData);
-	} catch (error) {
-		logger.error(`Failed to save user data for user ${userId}:`, {
-			error: error.message,
-			stack: error.stack,
-		});
-
-		switch (error.constructor) {
-			case DocumentAlreadyExists:
-			case DocumentNotFound:
-			case UnexpectedError:
-				throw error;
-			default:
-				logger.error('Unexpected error during saveUserData:', error);
-				throw new UnexpectedError(`Failed to save user data: ${error.message}`);
-		}
-	}
-}
-
-/**
- * Retrieves or creates user data based on the provided refresh token.
- *
- * This function fetches user information using the provided OAuth2 client and refresh token.
- * If the user does not exist in Firebase, a new user is created. The user data is then formatted
- * and returned.
- *
- * @param {string} refreshToken - The OAuth2 refresh token.
- * @param {google.auth.OAuth2} oAuth2Client - The OAuth2 client to use for fetching user information.
- * @returns {Promise<Object>} - A promise that resolves to the formatted user data object.
- * @throws {RequiredVariableError} - If the refreshToken parameter is missing.
- * @throws {UnexpectedError} - If an unexpected error occurs during the process.
- */
-async function getUserData(refreshToken, oAuth2Client) {
-	if (!refreshToken) {
-		logger.error('Missing refreshToken parameter');
-		throw new RequiredVariableError({ refreshToken });
-	}
-
-	if (!oAuth2Client) {
-		logger.error('Missing oAuth2Client parameter');
-		throw new RequiredVariableError({ oAuth2Client });
-	}
-
-	try {
-		const userInfo = await getUserInfo(oAuth2Client);
-
-		try {
-			const userRecord = await firebaseAuth.getUserByEmail(userInfo.email);
-			await updateDocument('users', userRecord.uid, { refresh_token: refreshToken });
-			const data = await readDocument('users', userRecord.uid);
-			return { userId: userRecord.uid, userData: data };
-		} catch (error) {
-			if (error.code === 'auth/user-not-found') {
-				const newUser = await firebaseAuth.createUser({
-					email: userInfo.email,
-					displayName: userInfo.name,
-					photoURL: userInfo.picture,
-				});
-
-				return formatUserData(newUser.uid, refreshToken);
-			}
-
-			logger.error('Unexpected error handling Firebase auth:', error);
-			throw new UnexpectedError(`Unexpected error handling Firebase auth: ${error.message}`);
-		}
-	} catch (error) {
-		logger.error(`Failed to get user data from refres_token: ${refreshToken}:`, {
-			error: error.message,
-			stack: error.stack,
-		});
-
-		switch (error.constructor) {
-			case RequiredVariableError:
-			case ReferenceError:
-			case UnexpectedError:
-				throw error;
-			default:
-				logger.error('Unexpected error during getUserData:', error);
-				throw new UnexpectedError(`Unexpected error during getUserData: ${error.message}`);
-		}
-	}
-}
-
-/**
- * Exchanges an authorization code for an OAuth2 token.
- *
- * This function decodes the provided authorization code and exchanges it for an OAuth2 token.
- * If the token exchange fails or no token is received, an error is thrown.
- *
- * @param {string} code - The authorization code to exchange for a token.
- * @returns {Promise<Object>} - A promise that resolves to the OAuth2 token.
- * @throws {RequiredVariableError} - If the code parameter is missing.
- * @throws {TokenError} - If the token exchange fails or no token is received.
- * @throws {UnexpectedError} - If an unexpected error occurs during the process.
- *
- */
-async function exchangeCodeForToken(code, oAuth2Client) {
-	if (!code) {
-		logger.error('Missing code parameter');
-		throw new RequiredVariableError({ code });
-	}
-
-	if (!oAuth2Client) {
-		logger.error('Missing oAuth2Client parameter');
-		throw new RequiredVariableError({ oAuth2Client });
-	}
-
-	try {
-		const decodedCode = decodeURIComponent(code);
-		const token = await new Promise((resolve, reject) => {
-			oAuth2Client.getToken(decodedCode, (err, token) => {
-				if (err) {
-					logger.error('Token exchange failed:', err);
-					reject(new TokenError(`Failed to exchange code: ${err.message}`));
-					return;
-				}
-				if (!token) {
-					logger.error(`No token received from OAuth2Client: ${oAuth2Client}`);
-					reject(
-						new ReferenceError(`No token received from OAuth2Client: ${oAuth2Client}`),
-					);
-					return;
-				}
-				resolve(token);
-			});
-		});
-
-		oAuth2Client.setCredentials(token);
-		return token;
-	} catch (error) {
-		logger.error(`Failed to get Token from code: ${code}`, {
-			error: error.message,
-			stack: error.stack,
-		});
-
-		switch (error.constructor) {
-			case TokenError:
-			case ReferenceError:
-				throw error;
-			default:
-				logger.error('Unexpected error during token exchange:', error);
-				throw new UnexpectedError(
-					`Unexpected error during token exchange: ${error.message}`,
-				);
-		}
-	}
 }
 
 // Renew tokens
