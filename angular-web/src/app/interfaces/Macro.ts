@@ -11,7 +11,7 @@ export interface Macro {
 		action: {
 			type: ACTION;
 			service: ATTACHMENT | CONTENT | DATES | SUMMARY;
-			content: object;
+			content: [{ name: string; id: string }];
 		};
 	};
 }
@@ -20,9 +20,8 @@ export enum ACTION {
 	Attachment = 'attachment',
 	Content = 'content',
 	Summary = 'summary',
-	Dates = 'dates'
+	Dates = 'dates',
 }
-
 
 export enum ATTACHMENT {
 	GoogleDrive = 'google-drive',
@@ -43,4 +42,3 @@ export enum DATES {
 	GoogleCalendar = 'google-drive',
 	OutlookCalendar = 'outlook',
 }
-

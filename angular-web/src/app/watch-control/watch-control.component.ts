@@ -48,7 +48,7 @@ const DEFAULT_MACROS_PER_PAGE = 4;
 })
 export class WatchControlComponent implements OnInit {
 	// ---- Authentication state ----
-	private userId: string | null = null;
+	private userId: string = '';
 
 	// ---- Watch status state ----
 	protected isWatchEnabled: boolean = false;
@@ -59,7 +59,7 @@ export class WatchControlComponent implements OnInit {
 	private parsedMacros: object[] = [];
 
 	// ---- Table UI state ----
-	protected displayedColumns: string[] = ['name', 'labels', 'type', 'service'];
+	protected displayedColumns: string[] = ['name', 'labels', 'type', 'folders', 'actions'];
 	protected dataSource = new MatTableDataSource<object>([]);
 
 	// ---- Paginator variables ----
@@ -120,10 +120,11 @@ export class WatchControlComponent implements OnInit {
 
 		// Process data for display
 		this.parsedMacros = this.currentMacros.map((macro: Macro) => ({
+			id: macro.id,
 			name: macro.data.name,
 			labels: macro.data.labels.map((label) => label.name),
 			type: macro.data.action.type,
-			service: macro.data.action.service,
+			folders: macro.data.action.content.map((folder) => folder.name).join(', '),
 		}));
 
 		// Update data source and UI
@@ -141,6 +142,8 @@ export class WatchControlComponent implements OnInit {
 		this.authService.clearSession();
 		this.router.navigate(['/authenticate']);
 	}
+
+	// ---- Watch status event handlers ----
 
 	/**
 	 * Toggle watch status
@@ -196,6 +199,8 @@ export class WatchControlComponent implements OnInit {
 		}
 	}
 
+	// ---- Paginator event handlers ----
+
 	/**
 	 * Handle paginator events
 	 */
@@ -204,10 +209,35 @@ export class WatchControlComponent implements OnInit {
 		this.index = event.pageIndex;
 	}
 
+	// ---- Macro event handlers ----
+
 	/**
 	 * Navigate to macro creation page
 	 */
 	protected createMacro(): void {
 		this.router.navigate(['/macro-create']);
+	}
+
+	protected async editMacro(macroId: string): Promise<void> {
+		await this.deleteMacro(macroId);
+		this.createMacro();
+	}
+
+	protected async deleteMacro(macroId: string): Promise<void> {
+		try {
+			// Wait for the deletion to complete
+			await this.macroService.deleteMacro(this.userId, macroId);
+
+			// Update the local arrays directly before refreshing
+			this.currentMacros = this.currentMacros.filter((macro) => macro.id !== macroId);
+			this.parsedMacros = this.parsedMacros.filter((macro: any) => macro.id !== macroId);
+
+			this.length = this.parsedMacros.length;
+			this.dataSource.data = this.parsedMacros;
+
+
+		} catch (error) {
+			console.error('Error deleting macro:', error);
+		}
 	}
 }

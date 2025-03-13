@@ -4,6 +4,7 @@ const BASE_URL = 'http://localhost:5001';
 export enum ENDPOINTS {
 	// Macro
 	createMacro = `${BASE_URL}/macro-create`,
+	deleteMacro = `${BASE_URL}/macro-delete`,
 	getAllMacros = `${BASE_URL}/macro-get-all`,
 
 	// Auth

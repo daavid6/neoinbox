@@ -66,9 +66,13 @@ export class WatchGmailService {
 	}
 
 	public async isWatchEnabled(userId: string): Promise<boolean> {
-		return await firstValueFrom(
-			this.http.get<boolean>(`${ENDPOINTS.getWatchStatus}?userId=${userId}`),
+		const res = await firstValueFrom(
+			this.http.get<{ data: boolean; message: string }>(
+				`${ENDPOINTS.getWatchStatus}?userId=${userId}`,
+			),
 		);
+
+		return res.data;
 	}
 
 	private async updateWatchData(
@@ -76,7 +80,7 @@ export class WatchGmailService {
 		expiration: number,
 		beingEnable: boolean,
 	): Promise<string> {
-		const userId = this.authService.getCurrentUserId();
+		const userId = this.authService.getUserId();
 
 		if (!userId) throw new Error('User not authenticated');
 

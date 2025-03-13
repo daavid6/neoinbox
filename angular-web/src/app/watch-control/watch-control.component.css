@@ -218,6 +218,14 @@
 	box-shadow: 0px 0px 8px rgba(255, 82, 82, 0.5);
 }
 
+.action-buttons-cell {
+	display: flex;
+	justify-content: right;
+	align-items: center;
+	gap: 1rem;
+	padding-right: 1rem;
+}
+
 .action-buttons {
 	display: flex;
 	flex-wrap: wrap;

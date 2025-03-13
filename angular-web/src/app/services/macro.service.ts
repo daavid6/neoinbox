@@ -45,4 +45,12 @@ export class MacroService {
 			}),
 		);
 	}
+
+	public async deleteMacro(userId: string, macroId: string): Promise<void> {
+		if (!userId || !macroId) return;
+
+		await firstValueFrom(
+			this.http.delete(ENDPOINTS.deleteMacro, { body: { userId, macroId } }),
+		);
+	}
 }

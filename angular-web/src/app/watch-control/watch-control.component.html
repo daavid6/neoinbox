@@ -58,11 +58,11 @@
 				</mat-card-header>
 
 				<mat-card-content>
-					<mat-slide-toggle class="watch-toggle"
+					<mat-slide-toggle
+						class="watch-toggle"
 						[checked]="isWatchEnabled"
 						(change)="toggleWatch($event.checked)"
 						[disabled]="isWaitingResponse"
-
 					>
 						@if (isWaitingResponse) {
 							<span>
@@ -128,9 +128,33 @@
 							</ng-container>
 
 							<!-- What Column -->
-							<ng-container matColumnDef="service">
-								<th mat-header-cell *matHeaderCellDef>Service</th>
-								<td mat-cell *matCellDef="let element">{{ element.service }}</td>
+							<ng-container matColumnDef="folders">
+								<th mat-header-cell *matHeaderCellDef>Folders</th>
+								<td mat-cell *matCellDef="let element">{{ element.folders }}</td>
+							</ng-container>
+
+							<ng-container matColumnDef="actions">
+								<th mat-header-cell *matHeaderCellDef></th>
+								<td mat-cell *matCellDef="let element; let i = index">
+									<div class="action-buttons-cell">
+										<button
+											mat-icon-button
+											color="primary"
+											aria-label="Edit macro"
+											(click)="editMacro(element.id)"
+										>
+											<mat-icon>edit</mat-icon>
+										</button>
+										<button
+											mat-icon-button
+											color="warn"
+											aria-label="Delete macro"
+											(click)="deleteMacro(element.id)"
+										>
+											<mat-icon>delete</mat-icon>
+										</button>
+									</div>
+								</td>
 							</ng-container>
 
 							<tr
