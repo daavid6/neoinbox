@@ -36,6 +36,19 @@ export async function createMacro(user, name, labels, action) {
 	}
 }
 
+export async function deleteMacro(userId, macroId) {
+	if (!userId || !macroId) throw new Error('Invalid input parameters');
+
+	const macroRef = db.collection('users').doc(userId).collection('macros').doc(macroId);
+
+	try {
+		db.recursiveDelete(macroRef);
+	} catch (error) {
+		logger.error('Error deleting macro: ', error);
+		throw new UnexpectedError(`Error deleting macro: ${error.message}`);
+	}
+}
+
 export async function getMacro(user, name) {
 	const query = db.collection('users').doc(user).collection('macros').where('name', '==', name);
 

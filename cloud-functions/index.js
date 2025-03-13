@@ -10,6 +10,7 @@ import { getHistoryListSince } from './app/manager/gmail/list/list.js';
 import { getAction } from './app/manager/macros/actions.js';
 import {
 	createMacro,
+	deleteMacro,
 	getMacro,
 	getAllMacros,
 	getAllMacrosWithLabels,
@@ -331,7 +332,6 @@ export const macroCreate = async (req, res) => {
 		});
 	}
 
-	console.log(req.body);
 	const { userId, name, labels, actionType, service, remainder } = req.body;
 
 	if (!userId || !name || !labels || !actionType || !service || !remainder) {
@@ -354,6 +354,50 @@ export const macroCreate = async (req, res) => {
 		res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
 			error: ReasonPhrases.INTERNAL_SERVER_ERROR,
 			errorMessage: `Error creating macro:\n ${error}`,
+		});
+	}
+};
+
+export const macroDelete = async (req, res) => {
+	res.set('Access-Control-Allow-Origin', '*');
+	res.set('Access-Control-Allow-Methods', 'DELETE, OPTIONS');
+	res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+	// Http request handling
+	if (req.method === 'OPTIONS') {
+		return res.status(StatusCodes.NO_CONTENT).send({
+			data: {},
+			message: ReasonPhrases.NO_CONTENT,
+		});
+	}
+
+	if (req.method !== 'DELETE') {
+		return res.status(StatusCodes.METHOD_NOT_ALLOWED).send({
+			error: ReasonPhrases.METHOD_NOT_ALLOWED,
+			errorMessage: 'Invalid HTTP method. Only DELETE is allowed.',
+		});
+	}
+
+	if (!req.body.userId || !req.body.macroId) {
+		return res.status(StatusCodes.BAD_REQUEST).send({
+			error: ReasonPhrases.BAD_REQUEST,
+			errorMessage: 'Missing required fields',
+		});
+	}
+
+	const { userId, macroId } = req.body;
+
+	try {
+		await deleteMacro(userId, macroId);
+
+		res.status(StatusCodes.OK).send({
+			data: { macroId },
+			message: ReasonPhrases.OK,
+		});
+	} catch (error) {
+		res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
+			error: ReasonPhrases.INTERNAL_SERVER_ERROR,
+			errorMessage: `Error deleting macro:\n ${error}`,
 		});
 	}
 };

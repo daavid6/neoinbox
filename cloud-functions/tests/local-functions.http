@@ -113,6 +113,17 @@ Content-Type: application/json
 
 
 
+### Delete the macro (macroId) of the user (userId)
+delete http://localhost:5001/macro-delete
+Content-Type: application/json
+
+{
+	"userId": "UZK3zTcEA6gPW6ymfqCJor6agKa2",
+	"macroId": "C8VMQevVUkhv8kZvd1g5"
+}
+
+
+
 ### Get the macro (name) of the user (userId)
 get http://localhost:5001/macro-get?userId=testing_user_id&name=Inbox_Attachment_Ideas
 

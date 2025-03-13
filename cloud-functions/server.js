@@ -53,6 +53,11 @@ app.post('/macro-create', async (req, res) => {
 	await handlers.macroCreate(req, res);
 });
 
+app.delete('/macro-delete', async (req, res) => {
+	req.method = 'DELETE';
+	await handlers.macroDelete(req, res);
+});
+
 app.get('/macro-get', async (req, res) => {
 	req.method = 'GET';
 	await handlers.macroGet(req, res);
