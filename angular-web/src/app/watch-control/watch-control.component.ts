@@ -122,7 +122,7 @@ export class WatchControlComponent implements OnInit {
 		this.parsedMacros = this.currentMacros.map((macro: Macro) => ({
 			id: macro.id,
 			name: macro.data.name,
-			labels: macro.data.labels.map((label) => label.name),
+			labels: macro.data.labels.map((label) => label.name).join(', '),
 			type: macro.data.action.type,
 			folders: macro.data.action.content.map((folder) => folder.name).join(', '),
 		}));
@@ -234,8 +234,6 @@ export class WatchControlComponent implements OnInit {
 
 			this.length = this.parsedMacros.length;
 			this.dataSource.data = this.parsedMacros;
-
-
 		} catch (error) {
 			console.error('Error deleting macro:', error);
 		}
