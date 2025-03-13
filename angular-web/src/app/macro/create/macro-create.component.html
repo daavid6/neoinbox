@@ -1,169 +1,253 @@
-<section class="container">
-	<mat-card appearance="outlined">
-		<mat-card-header>
-			<mat-card-title>New Macro</mat-card-title>
-		</mat-card-header>
+<mat-toolbar class="top-toolbar">
+	<button class="sidenav-toggle" mat-icon-button (click)="sidenav.toggle()">
+		<mat-icon>menu</mat-icon>
+	</button>
 
-		<mat-card-content>
-			<mat-stepper class="stepper" [orientation]="(stepperOrientation | async)!">
-				<mat-step label="Set a name for the Macro">
-					<form>
-						<mat-form-field>
-							<mat-label>Macro's name</mat-label>
-							<input
-								matInput
-								required
-								[value]="macroName()"
-								(input)="saveMacroName($event)"
-							/>
-						</mat-form-field>
-						<div>
-							<button
-								type="button"
-								mat-button
-								matStepperNext
-								[disabled]="!macroName()"
-							>
-								Next
-							</button>
-						</div>
-					</form>
-				</mat-step>
+	<span class="logo"><h1 routerLink="/watch-control">NeoInbox</h1></span>
 
-				<mat-step label="Select an action">
-					<form>
-						<mat-grid-list class="mat-grid-list" cols="3" rowHeight="8rem">
-							<mat-chip-listbox (change)="onActionSelected($event)">
-								@for (action of actions; track action) {
-									<mat-grid-tile
-										[colspan]="action.cols"
-										[rowspan]="action.rows"
-										[style.background]="action.color"
-									>
-										<mat-chip-option [value]="action.text">{{
-											action.text
-										}}</mat-chip-option>
-									</mat-grid-tile>
-								}
-							</mat-chip-listbox>
-						</mat-grid-list>
+	<span class="spacer"></span>
 
-						<div>
-							<ng-content select="[selector]"></ng-content>
-							<button type="button" mat-button matStepperPrevious>Back</button>
-							<button type="button" mat-button matStepperNext>Next</button>
-						</div>
-					</form>
-				</mat-step>
+	<button mat-icon-button [matMenuTriggerFor]="userMenu">
+		<mat-icon>account_circle</mat-icon>
+	</button>
 
-				<mat-step label="Select one or more Labels">
-					<form>
-						<mat-form-field>
-							<mat-chip-grid #chipGrid aria-label="Enter template form keywords">
-								@for (label of selectedLabels(); track label.id) {
-									<mat-chip-row (removed)="removeKeyword(label)">
-										{{ label.name }}
-										<button matChipRemove>
-											<mat-icon>cancel</mat-icon>
-										</button>
-									</mat-chip-row>
-								}
+	<mat-menu #userMenu="matMenu">
+		<button mat-menu-item>Profile</button>
+		<button mat-menu-item>Settings</button>
+		<mat-divider></mat-divider>
+		<button mat-menu-item (click)="signOut()">Sign out</button>
+	</mat-menu>
+</mat-toolbar>
 
-								<input
-									name="currentLabel"
-									placeholder="Add label"
-									#labelInput
-									[formControl]="currentLabel"
-									[matChipInputFor]="chipGrid"
-									[matAutocomplete]="auto"
-									[matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-									(matChipInputTokenEnd)="addKeywordInputEvent($event)"
-								/>
-								<mat-autocomplete #auto="matAutocomplete">
-									@for (label of filteredLabels(); track label) {
-										<mat-option
-											(onSelectionChange)="
-												addKeywordFromOption($event, labelInput)
-											"
-											[value]="label"
-											>{{ label }}</mat-option
+<mat-sidenav-container class="sidenav-container">
+	<mat-sidenav #sidenav mode="side" class="sidenav">
+		<mat-nav-list>
+			<a routerLink="/watch-control" class="sidenav-element">
+				<mat-icon>dashboard</mat-icon>
+				<p>Dashboard</p>
+			</a>
+			<a routerLink="/macro-menu" routerLinkActive="active-link" class="sidenav-element">
+				<mat-icon>auto_awesome_motion</mat-icon>
+				<p>Macros</p>
+			</a>
+			<a routerLinkActive="active-link" class="sidenav-element">
+				<mat-icon>insights</mat-icon>
+				<p>Analytics</p>
+			</a>
+			<a routerLinkActive="active-link" class="sidenav-element">
+				<mat-icon>settings</mat-icon>
+				<p>Settings</p>
+			</a>
+		</mat-nav-list>
+	</mat-sidenav>
+
+	<mat-sidenav-content class="content">
+		<div class="page-container">
+			<mat-card class="macros-create-card">
+				<mat-card-header>
+					<mat-card-title>New Macro</mat-card-title>
+				</mat-card-header>
+
+				<mat-card-content class="macros-create-content">
+					<div class="stepper-container">
+						<mat-stepper class="stepper" [orientation]="(stepperOrientation | async)!">
+							<mat-step label="Set a name for the Macro">
+								<form>
+									<mat-form-field>
+										<mat-label>Macro's name</mat-label>
+										<input
+											matInput
+											required
+											[value]="macroName()"
+											(input)="saveMacroName($event)"
+										/>
+									</mat-form-field>
+									<div>
+										<button
+											type="button"
+											mat-button
+											matStepperNext
+											[disabled]="!macroName()"
 										>
+											Next
+										</button>
+									</div>
+								</form>
+							</mat-step>
+
+							<mat-step label="Select an action">
+								<form>
+									<mat-grid-list class="mat-grid-list" cols="3" rowHeight="8rem">
+										<mat-chip-listbox (change)="onActionSelected($event)">
+											@for (action of actions; track action) {
+												<mat-grid-tile
+													[colspan]="action.cols"
+													[rowspan]="action.rows"
+													[style.background]="action.color"
+												>
+													<mat-chip-option [value]="action.text">{{
+														action.text
+													}}</mat-chip-option>
+												</mat-grid-tile>
+											}
+										</mat-chip-listbox>
+									</mat-grid-list>
+
+									<div>
+										<ng-content select="[selector]"></ng-content>
+										<button type="button" mat-button matStepperPrevious>
+											Back
+										</button>
+										<button type="button" mat-button matStepperNext>
+											Next
+										</button>
+									</div>
+								</form>
+							</mat-step>
+
+							<mat-step label="Select one or more Labels">
+								<form>
+									<mat-form-field>
+										<mat-chip-grid
+											#chipGrid
+											aria-label="Enter template form keywords"
+										>
+											@for (label of selectedLabels(); track label.id) {
+												<mat-chip-row (removed)="removeKeyword(label)">
+													{{ label.name }}
+													<button matChipRemove>
+														<mat-icon>cancel</mat-icon>
+													</button>
+												</mat-chip-row>
+											}
+
+											<input
+												name="currentLabel"
+												placeholder="Add label"
+												#labelInput
+												[formControl]="currentLabel"
+												[matChipInputFor]="chipGrid"
+												[matAutocomplete]="auto"
+												[matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+												(matChipInputTokenEnd)="
+													addKeywordInputEvent($event)
+												"
+											/>
+											<mat-autocomplete #auto="matAutocomplete">
+												@for (label of filteredLabels(); track label) {
+													<mat-option
+														(onSelectionChange)="
+															addKeywordFromOption($event, labelInput)
+														"
+														[value]="label"
+														>{{ label }}</mat-option
+													>
+												}
+											</mat-autocomplete>
+										</mat-chip-grid>
+									</mat-form-field>
+
+									<div>
+										<ng-content select="[selector]"></ng-content>
+										<button type="button" mat-button matStepperPrevious>
+											Back
+										</button>
+										<button type="button" mat-button matStepperNext>
+											Next
+										</button>
+									</div>
+								</form>
+							</mat-step>
+
+							<mat-step label="Where to apply">
+								@switch (selectedAction()) {
+									@case (ACTION.Attachment) {
+										<div class="drive-picker-container">
+											<button
+												mat-raised-button
+												(click)="openPicker(ACTION.Attachment)"
+											>
+												Select Google Drive Folders
+											</button>
+											@if (selectedFolders().length > 0) {
+												<mat-chip-listbox>
+													@for (
+														folder of selectedFolders();
+														track folder.id
+													) {
+														<mat-chip>{{ folder.name }}</mat-chip>
+													}
+												</mat-chip-listbox>
+											}
+										</div>
 									}
-								</mat-autocomplete>
-							</mat-chip-grid>
-						</mat-form-field>
-
-						<div>
-							<ng-content select="[selector]"></ng-content>
-							<button type="button" mat-button matStepperPrevious>Back</button>
-							<button type="button" mat-button matStepperNext>Next</button>
-						</div>
-					</form>
-				</mat-step>
-
-				<mat-step label="Where to apply">
-					@switch (selectedAction()) {
-						@case (ACTION.Attachment) {
-							<div class="drive-picker-container">
-								<button mat-raised-button (click)="openPicker(ACTION.Attachment)">
-									Select Google Drive Folders
-								</button>
-								@if (selectedFolders().length > 0) {
-									<mat-chip-listbox>
-										@for (folder of selectedFolders(); track folder.id) {
-											<mat-chip>{{ folder.name }}</mat-chip>
-										}
-									</mat-chip-listbox>
+									@case (ACTION.Content) {
+										<div class="drive-picker-container">
+											<button
+												mat-raised-button
+												(click)="openPicker(ACTION.Content)"
+											>
+												Select Google Drive Folders
+											</button>
+											@if (selectedFolders().length > 0) {
+												<mat-chip-listbox>
+													@for (
+														folder of selectedFolders();
+														track folder.id
+													) {
+														<mat-chip>{{ folder.name }}</mat-chip>
+													}
+												</mat-chip-listbox>
+											}
+										</div>
+									}
+									@case (ACTION.Summary) {
+										<div class="drive-picker-container">
+											<button
+												mat-raised-button
+												(click)="openPicker(ACTION.Content)"
+											>
+												Select Google Drive Folders
+											</button>
+											@if (selectedFolders().length > 0) {
+												<mat-chip-listbox>
+													@for (
+														folder of selectedFolders();
+														track folder.id
+													) {
+														<mat-chip>{{ folder.name }}</mat-chip>
+													}
+												</mat-chip-listbox>
+											}
+										</div>
+									}
+									@case (ACTION.Dates) {
+										<div class="drive-picker-container">
+											<button
+												mat-raised-button
+												(click)="incrementCalendarPermissions()"
+											>
+												Give calendar permissions
+											</button>
+										</div>
+									}
 								}
-							</div>
-						}
-						@case (ACTION.Content) {
-							<div class="drive-picker-container">
-								<button mat-raised-button (click)="openPicker(ACTION.Content)">
-									Select Google Drive Folders
-								</button>
-								@if (selectedFolders().length > 0) {
-									<mat-chip-listbox>
-										@for (folder of selectedFolders(); track folder.id) {
-											<mat-chip>{{ folder.name }}</mat-chip>
-										}
-									</mat-chip-listbox>
-								}
-							</div>
-						}
-						@case (ACTION.Summary) {
-							<div class="drive-picker-container">
-								<button mat-raised-button (click)="openPicker(ACTION.Content)">
-									Select Google Drive Folders
-								</button>
-								@if (selectedFolders().length > 0) {
-									<mat-chip-listbox>
-										@for (folder of selectedFolders(); track folder.id) {
-											<mat-chip>{{ folder.name }}</mat-chip>
-										}
-									</mat-chip-listbox>
-								}
-							</div>
-						}
-						@case (ACTION.Dates) {
-							<div class="drive-picker-container">
-								<button mat-raised-button (click)="incrementCalendarPermissions()">
-									Give calendar permissions
-								</button>
-							</div>
-						}
-					}
-				</mat-step>
+							</mat-step>
 
-				<mat-step>
-					<ng-template matStepLabel>Done</ng-template>
-					<p class="done">You are now done.</p>
-					<div>
-						<button mat-button matStepperPrevious>Back</button>
-						<button mat-button (click)="executeFinalAction()">Finish</button>
+							<mat-step>
+								<ng-template matStepLabel>Done</ng-template>
+								<p class="done">You are now done.</p>
+								<div>
+									<button mat-button matStepperPrevious>Back</button>
+									<button mat-button (click)="executeFinalAction()">
+										Finish
+									</button>
+								</div>
+							</mat-step>
+						</mat-stepper>
 					</div>
-				</mat-step>
-			</mat-stepper>
-		</mat-card-content>
-	</mat-card>
-</section>
+				</mat-card-content>
+			</mat-card>
+		</div>
+	</mat-sidenav-content>
+</mat-sidenav-container>

@@ -1,7 +1,12 @@
+import { Router, RouterLink } from '@angular/router';
 import { Component, computed, signal, WritableSignal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { StepperOrientation, MatStepperModule } from '@angular/material/stepper';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,6 +19,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { MatOptionSelectionChange } from '@angular/material/core';
 import { MatGridListModule } from '@angular/material/grid-list';
+import { MatListModule } from '@angular/material/list';
 
 import { Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -24,7 +30,6 @@ import { ACTION, ATTACHMENT } from '../../interfaces/Macro';
 import { NameId } from '../../interfaces/Other';
 import { AuthService } from '../../services/auth.service';
 import { MacroService } from '../../services/macro.service';
-import { Router } from '@angular/router';
 
 type Folder = NameId;
 type ReducedLabel = NameId;
@@ -32,8 +37,14 @@ type ReducedLabel = NameId;
 @Component({
 	selector: 'app-macro-create',
 	imports: [
+		RouterLink,
 		// Angular Material
+		MatToolbarModule,
+		MatMenuModule,
+		MatDividerModule,
 		MatStepperModule,
+		MatSidenavModule,
+		MatListModule,
 		MatCardModule,
 		MatFormFieldModule,
 		MatAutocompleteModule,
@@ -221,5 +232,13 @@ export class MacroCreateComponent {
 	//Dates permissions
 	protected async incrementCalendarPermissions() {
 		await this.authService.incrementCalendarPermissions();
+	}
+
+	/**
+	 * Sign out the current user
+	 */
+	protected signOut(): void {
+		this.authService.clearSession();
+		this.router.navigate(['/authenticate']);
 	}
 }

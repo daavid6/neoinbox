@@ -6,19 +6,7 @@
 	"type": "module",
 	"scripts": {
 		"deploy:api": "gcloud functions deploy api --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=api --trigger-http --allow-unauthenticated",
-		"deploy:watch-renew": "gcloud functions deploy watch-renew --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=watchRenew --trigger-http --allow-unauthenticated",
-		"deploy:watch-enable": "gcloud functions deploy watch-enable --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=watchEnable --trigger-http --allow-unauthenticated",
-		"deploy:watch-disable": "gcloud functions deploy watch-disable --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=watchDisable --trigger-http --allow-unauthenticated",
-		"deploy:watch-status": "gcloud functions deploy watch-status --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=watchStatus --trigger-http --allow-unauthenticated",
-		"deploy:auth-url": "gcloud functions deploy auth-url --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=authUrl --trigger-http --allow-unauthenticated",
-		"deploy:auth-token": "gcloud functions deploy auth-token --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=authToken --trigger-http --allow-unauthenticated",
-		"deploy:macro-create": "gcloud functions deploy macro-create --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=macroCreate --trigger-http --allow-unauthenticated",
-		"deploy:macro-get": "gcloud functions deploy macro-get --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=macroGet --trigger-http --allow-unauthenticated",
-		"deploy:macro-get-all": "gcloud functions deploy macro-get-all --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=macroGetAll --trigger-http --allow-unauthenticated",
-		"deploy:macro-get-all-filtered": "gcloud functions deploy macro-get-all-filtered --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=macroGetAllFiltered --trigger-http --allow-unauthenticated",
-		"deploy:email-retrieve": "gcloud functions deploy email-retrieve --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=newMessage --trigger-topic=gmail-watch-topic",
-		"deploy:all-macro": "npm run deploy:macro-create && npm run deploy:macro-get && npm run deploy:macro-get-all && npm run deploy:macro-get-all-filtered",
-		"deploy:all": "npm run deploy:watch-renew && npm run deploy:watch-enable && npm run deploy:watch-disable && npm run deploy:auth-url && npm run deploy:auth-token && npm run deploy:email-retrieve && npm run deploy:watch-status"
+		"deploy:email-retrieve": "gcloud functions deploy email-retrieve --gen2 --runtime=nodejs22 --region=europe-west2 --source=. --entry-point=newMessage --trigger-topic=gmail-watch-topic"
 	},
 	"repository": {
 		"type": "git",
