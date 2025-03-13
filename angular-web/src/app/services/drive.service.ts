@@ -143,7 +143,7 @@ export class DriveService {
 		return new Promise<Tokens>(async (resolve, reject) => {
 			try {
 				const code = await this.authService.incrementDrivePermissions();
-				const { tokens } = await this.authService.exchangeCodeForTokens(code);
+				const { tokens } = await this.authService.validateCode(code);
 
 				resolve(tokens);
 			} catch (error) {

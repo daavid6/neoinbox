@@ -207,7 +207,7 @@ export class MacroCreateComponent {
 	}
 
 	protected async executeFinalAction() {
-		const userId = this.authService.getCurrentUserId() || '';
+		const userId = this.authService.getUserId() || '';
 		const name = this.macroName();
 		const labels = this.selectedLabels();
 		const actionType = this.selectedAction() as ACTION;
