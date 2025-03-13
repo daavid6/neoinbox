@@ -13,13 +13,18 @@
 	display: flex;
 	align-items: center;
 	height: var(--top-toolbar-height);
-	padding: 0.5rem 1rem 0.5rem 4rem;
+	padding: 0.5rem 1rem;
 	gap: 1rem;
 
 	color: white;
 	border-bottom: 1px solid rgba(100, 100, 100, 0.85);
 	background: linear-gradient(to right, rgba(100, 100, 100, 0.85), rgba(100, 100, 100, 0.65));
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.sidenav-toggle .mat-icon {
+	display: flex;
+	color: #303030;
 }
 
 .top-toolbar h1 {
@@ -50,15 +55,41 @@
 }
 
 
+/* Side Nav style*/
+
+.sidenav-container {
+	height: calc(100vh - 4rem);
+}
+
+.sidenav {
+	width: 16rem;
+	padding: 1.5rem;
+	border-radius: 0;
+	background-color: rgb(14, 14, 14);
+}
+
+.sidenav-element {
+	display: flex;
+	justify-content: left;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
+	color: #ffffff;
+}
+
 
 /* ----- Main Container ----- */
+.content {
+	background: linear-gradient(to right, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.65));
+}
+
+
+
 .page-container {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	height: calc(100vh - var(--top-toolbar-height));
-
-	background: linear-gradient(to right, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.65));
 }
 
 .macros-preview-card {
