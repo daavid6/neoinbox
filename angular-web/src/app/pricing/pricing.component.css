@@ -1,0 +1,354 @@
+:host {
+	/* Layout */
+	--top-toolbar-height: 4rem;
+
+	/* Typography */
+	--heading-font: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+
+	/* Colors */
+	--primary-color: #f6b6d6;
+	--accent-color: #ffee69;
+	--dark-bg: rgba(0, 0, 0, 0.85);
+	--light-text: #ffffff;
+	--card-bg-basic: #ffffff;
+	--card-bg-premium: #ffffff;
+	--card-bg-enterprise: #ffffff;
+	--featured-border: #f6b6d6;
+	--check-color: #4CAF50;
+	--close-color: #F44336;
+}
+
+/* ----- Toolbar ----- */
+.top-toolbar {
+	display: flex;
+	align-items: center;
+	height: var(--top-toolbar-height);
+	padding: 0.5rem 4rem;
+	gap: 1rem;
+
+	color: white;
+	border-bottom: 1px solid rgba(100, 100, 100, 0.85);
+	background: linear-gradient(to right, rgba(100, 100, 100, 0.85), rgba(100, 100, 100, 0.65));
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.logo {
+	cursor: pointer;
+}
+
+.top-toolbar h1 {
+	font-size: 2rem;
+	font-weight: 700;
+	margin: 0;
+}
+
+.spacer {
+	flex: 1 1 auto;
+}
+
+/* ----- Buttons ----- */
+.top-toolbar button {
+	padding: 0.75rem 1.5rem;
+	min-width: 10rem;
+	font-size: 1rem;
+	font-weight: 600;
+
+	background-color: #ffee69;
+	color: black;
+	border-radius: 0.5rem;
+	border: none;
+
+	cursor: pointer;
+	transition: all 0.3s ease;
+}
+
+.top-toolbar button:hover {
+	background-color: #f6b6d6;
+	transform: scale(1.05);
+}
+
+.top-toolbar button:active {
+	background-color: #ff85c1;
+	transform: scale(0.95);
+}
+
+
+/* ----- Page Container ----- */
+.page-container {
+	background: linear-gradient(to right, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.65));
+	min-height: calc(100vh - var(--top-toolbar-height));
+	padding: 3rem 1.5rem;
+	color: var(--light-text);
+}
+
+/* ----- Header ----- */
+.pricing-header {
+	text-align: center;
+	max-width: 80%;
+	margin: 0 auto 4rem;
+}
+
+.pricing-header h2 {
+	font-family: var(--heading-font);
+	font-size: 3rem;
+	font-weight: 800;
+	color: var(--primary-color);
+	margin-bottom: 1rem;
+}
+
+.pricing-header p {
+	font-size: 1.2rem;
+	opacity: 0.9;
+}
+
+/* ----- Pricing Tiers ----- */
+.pricing-tiers {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 2rem;
+	max-width: 1200px;
+	margin: 0 auto;
+	perspective: 2000px;
+}
+
+/* Card Base Styles */
+.tier-card {
+	flex: 1;
+	max-width: 350px;
+	position: relative;
+	border-radius: 16px;
+	background-color: white;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+	overflow: hidden;
+	transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* 3D Effects */
+.tier-card.basic {
+	transform: perspective(2000px) rotateY(15deg);
+	transform-style: preserve-3d;
+	z-index: 1;
+}
+
+.tier-card.enterprise {
+	transform: perspective(2000px) rotateY(-15deg);
+	transform-style: preserve-3d;
+	z-index: 1;
+}
+
+.tier-card.featured {
+	transform: perspective(2000px) rotateY(0) scale(1.05);
+	z-index: 2;
+	box-shadow: 0 15px 50px rgba(246, 182, 214, 0.5);
+	border: 2px solid var(--featured-border);
+}
+
+/* Hover States */
+.tier-card:hover {
+	transform: perspective(2000px) rotateY(0) translateY(-10px);
+	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+	z-index: 3;
+}
+
+.tier-card.featured:hover {
+	transform: perspective(2000px) rotateY(0) translateY(-10px) scale(1.05);
+}
+
+/* Popular Tag */
+.popular-tag {
+	position: absolute;
+	top: 20px;
+	right: -35px;
+	background-color: var(--accent-color);
+	color: rgba(0, 0, 0, 0.8);
+	font-weight: 700;
+	padding: 8px 40px;
+	transform: rotate(45deg);
+	font-size: 0.85rem;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+	z-index: 1;
+}
+
+/* Card Content */
+.card-content {
+	padding: 2rem;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+/* Tier Header */
+.tier-header {
+	text-align: center;
+	margin-bottom: 2rem;
+	padding-bottom: 1.5rem;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.tier-header h3 {
+	font-family: var(--heading-font);
+	font-size: 1.8rem;
+	font-weight: 700;
+	margin: 0 0 1rem;
+	color: #333;
+}
+
+.price {
+	margin-bottom: 1rem;
+}
+
+.amount {
+	font-size: 3rem;
+	font-weight: 800;
+	color: #333;
+}
+
+.period {
+	font-size: 1.1rem;
+	color: #777;
+}
+
+.description {
+	font-size: 1rem;
+	color: #555;
+	margin: 0;
+}
+
+/* Features List */
+.features {
+	margin-bottom: 2rem;
+	flex: 1;
+}
+
+.features ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.features li {
+	display: flex;
+	align-items: center;
+	margin-bottom: 1rem;
+	color: #333;
+	font-size: 1rem;
+}
+
+.features mat-icon {
+	margin-right: 10px;
+	font-size: 1.2rem;
+}
+
+.check-icon {
+	color: var(--check-color);
+}
+
+.close-icon {
+	color: var(--close-color);
+}
+
+/* CTA Buttons */
+.cta-button {
+	padding: 1rem;
+	border-radius: 8px;
+	border: none;
+	font-family: var(--heading-font);
+	font-weight: 600;
+	font-size: 1rem;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	width: 100%;
+}
+
+.cta-button.basic {
+	background-color: #e0e0e0;
+	color: #333;
+}
+
+.cta-button.premium {
+	background-color: var(--primary-color);
+	color: #333;
+	box-shadow: 0 4px 10px rgba(246, 182, 214, 0.5);
+}
+
+.cta-button.enterprise {
+	background-color: #333;
+	color: white;
+}
+
+.cta-button:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 7px 14px rgba(0, 0, 0, 0.2);
+}
+
+.cta-button:active {
+	transform: translateY(0);
+	box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Contact Section */
+.contact-section {
+	max-width: 700px;
+	margin: 5rem auto 0;
+	padding: 2rem;
+	background-color: rgba(255, 255, 255, 0.05);
+	border-radius: 16px;
+	text-align: center;
+}
+
+.contact-content h3 {
+	font-family: var(--heading-font);
+	font-size: 1.8rem;
+	margin-bottom: 1rem;
+}
+
+.contact-content p {
+	margin-bottom: 2rem;
+	font-size: 1.1rem;
+	opacity: 0.9;
+}
+
+.cta-button.contact {
+	background-color: var(--accent-color);
+	color: #333;
+	max-width: 200px;
+	margin: 0 auto;
+}
+
+/* Responsive Design */
+@media (max-width: 960px) {
+	.pricing-tiers {
+		flex-direction: column;
+		gap: 2rem;
+	}
+
+	.tier-card {
+		width: 100%;
+		max-width: 400px;
+		transform: none !important;
+	}
+
+	.tier-card.featured {
+		order: -1;
+		transform: scale(1.05) !important;
+	}
+}
+
+@media (max-width: 600px) {
+	.pricing-header h2 {
+		font-size: 2rem;
+	}
+
+	.top-toolbar {
+		padding: 0 1rem;
+	}
+
+	.page-container {
+		padding: 2rem 1rem;
+	}
+
+	.card-content {
+		padding: 1.5rem;
+	}
+}
