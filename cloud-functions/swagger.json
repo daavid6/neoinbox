@@ -1,0 +1,1362 @@
+{
+	"swagger": "2.0",
+	"info": {
+		"title": "NeoInbox API",
+		"description": "API for Gmail automation, watches, and macros management",
+		"version": "1.0.0"
+	},
+	"host": "europe-west2-neoinbox.cloudfunctions.net",
+	"basePath": "/api",
+	"tags": [
+		{
+			"name": "Watch",
+			"description": "Gmail notification watch endpoints"
+		},
+		{
+			"name": "Auth",
+			"description": "Authentication endpoints for OAuth2"
+		},
+		{
+			"name": "Macro",
+			"description": "Email automation macro endpoints"
+		}
+	],
+	"schemes": ["https"],
+	"consumes": ["application/json"],
+	"produces": ["application/json"],
+	"paths": {
+		"/": {
+			"get": {
+				"summary": "Health Check",
+				"description": "Verifies that the API server is running",
+				"tags": ["General"],
+				"responses": {
+					"200": {
+						"description": "API is running",
+						"schema": {
+							"type": "string",
+							"example": "NeoInbox API is running"
+						}
+					}
+				}
+			}
+		},
+		"/watch-renew": {
+			"post": {
+				"summary": "Renew expiring Gmail watches",
+				"description": "Triggers renewal of all Gmail push notification watches that are nearing expiration",
+				"tags": ["Watch"],
+				"responses": {
+					"200": {
+						"description": "Watches successfully renewed",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"description": "Empty object for successful renewal"
+								},
+								"message": {
+									"type": "string",
+									"example": "OK",
+									"description": "Success message"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Method not allowed",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Method Not Allowed",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Invalid HTTP method. Only POST is allowed.",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Server error",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Internal Server Error",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Error renewing watch data: [error details]",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/watch-enable": {
+			"post": {
+				"summary": "Enable Gmail watch",
+				"description": "Enables Gmail push notifications for a user",
+				"tags": ["Watch"],
+				"parameters": [
+					{
+						"name": "body",
+						"in": "body",
+						"required": true,
+						"description": "Watch parameters",
+						"schema": {
+							"type": "object",
+							"required": ["historyId", "expiration", "userId"],
+							"properties": {
+								"historyId": {
+									"type": "string",
+									"description": "Gmail history ID"
+								},
+								"expiration": {
+									"type": "integer",
+									"description": "Watch expiration timestamp in milliseconds"
+								},
+								"userId": {
+									"type": "string",
+									"description": "User ID"
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Watch enabled successfully",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"oldHistoryId": {
+											"type": "string",
+											"description": "Previous history ID"
+										}
+									}
+								},
+								"message": {
+									"type": "string",
+									"example": "OK",
+									"description": "Success message"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Bad Request",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Missing historyId, expiration or userId in body",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Method not allowed",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Method Not Allowed",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Invalid HTTP method. Only POST is allowed.",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Server error",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Internal Server Error",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Error updating watch data: [error details]",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/watch-disable": {
+			"post": {
+				"summary": "Disable Gmail watch",
+				"description": "Disables Gmail push notifications for a user",
+				"tags": ["Watch"],
+				"parameters": [
+					{
+						"name": "body",
+						"in": "body",
+						"required": true,
+						"description": "User information",
+						"schema": {
+							"type": "object",
+							"required": ["userId"],
+							"properties": {
+								"userId": {
+									"type": "string",
+									"description": "User ID"
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Watch disabled successfully",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"description": "Empty object for successful disable operation"
+								},
+								"message": {
+									"type": "string",
+									"example": "OK",
+									"description": "Success message"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Bad Request",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Missing userId in body",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Method not allowed",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Method Not Allowed",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Invalid HTTP method. Only POST is allowed.",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Server error",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Internal Server Error",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Error updating watch data: [error details]",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/watch-status": {
+			"get": {
+				"summary": "Get Gmail watch status",
+				"description": "Returns the current status of Gmail push notifications for a user",
+				"tags": ["Watch"],
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "query",
+						"required": true,
+						"type": "string",
+						"description": "User ID"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Watch status retrieved successfully",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "boolean",
+									"description": "Whether watch is enabled"
+								},
+								"message": {
+									"type": "string",
+									"example": "OK",
+									"description": "Success message"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Bad Request",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Missing required field: userId",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Watch data not found",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Not Found",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Watch data not found",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Method not allowed",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Method Not Allowed",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Invalid HTTP method. Only GET is allowed.",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Server error",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Internal Server Error",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Error getting watch status: [error details]",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth-url": {
+			"post": {
+				"summary": "Generate OAuth authorization URL",
+				"description": "Creates a URL for OAuth 2.0 authorization with Gmail",
+				"tags": ["Auth"],
+				"parameters": [
+					{
+						"name": "body",
+						"in": "body",
+						"required": true,
+						"description": "Authorization parameters",
+						"schema": {
+							"type": "object",
+							"required": ["scopes"],
+							"properties": {
+								"scopes": {
+									"type": "array",
+									"items": {
+										"type": "string"
+									},
+									"description": "OAuth scopes to request"
+								},
+								"state": {
+									"type": "object",
+									"description": "Optional state to include in the OAuth request"
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Authorization URL generated successfully",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"url": {
+											"type": "string",
+											"description": "OAuth authorization URL"
+										}
+									}
+								},
+								"message": {
+									"type": "string",
+									"example": "OK",
+									"description": "Success message"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Bad Request",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Missing scopes in payload",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Method not allowed",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Method Not Allowed",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Invalid HTTP method. Only POST is allowed.",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth-token": {
+			"post": {
+				"summary": "Exchange authorization code for tokens",
+				"description": "Validates an OAuth authorization code and returns access/refresh tokens",
+				"tags": ["Auth"],
+				"parameters": [
+					{
+						"name": "body",
+						"in": "body",
+						"required": true,
+						"description": "Authorization code",
+						"schema": {
+							"type": "object",
+							"required": ["code"],
+							"properties": {
+								"code": {
+									"type": "string",
+									"description": "OAuth authorization code"
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Tokens retrieved successfully",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"tokens": {
+											"type": "object",
+											"properties": {
+												"access_token": {
+													"type": "string",
+													"description": "OAuth access token"
+												},
+												"refresh_token": {
+													"type": "string",
+													"description": "OAuth refresh token"
+												},
+												"expiry_date": {
+													"type": "integer",
+													"description": "Token expiration timestamp"
+												}
+											}
+										},
+										"userId": {
+											"type": "string",
+											"description": "User identifier"
+										}
+									}
+								},
+								"message": {
+									"type": "string",
+									"example": "OK",
+									"description": "Success message"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Bad Request",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Missing code in body",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Method not allowed",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Method Not Allowed",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Invalid HTTP method. Only POST is allowed.",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/macro-create": {
+			"post": {
+				"summary": "Create a new macro",
+				"description": "Creates a new automation macro for handling emails",
+				"tags": ["Macro"],
+				"parameters": [
+					{
+						"name": "body",
+						"in": "body",
+						"required": true,
+						"description": "Macro information",
+						"schema": {
+							"type": "object",
+							"required": ["userId", "name", "labels", "actionType", "service", "remainder"],
+							"properties": {
+								"userId": {
+									"type": "string",
+									"description": "User ID"
+								},
+								"name": {
+									"type": "string",
+									"description": "Macro name"
+								},
+								"labels": {
+									"type": "array",
+									"items": {
+										"type": "string"
+									},
+									"description": "Gmail label IDs for triggering the macro"
+								},
+								"actionType": {
+									"type": "string",
+									"description": "Action type to perform",
+									"enum": ["attachment", "content", "summary", "dates"]
+								},
+								"service": {
+									"type": "string",
+									"description": "Service to handle the action",
+									"enum": ["google-drive", "one-drive"]
+								},
+								"remainder": {
+									"type": "object",
+									"description": "Additional parameters for the action"
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Macro created successfully",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"description": "Empty object for successful creation"
+								},
+								"message": {
+									"type": "string",
+									"example": "OK",
+									"description": "Success message"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Bad Request",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Missing required fields",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Method not allowed",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Method Not Allowed",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Invalid HTTP method. Only POST is allowed.",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Server error",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Internal Server Error",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Error creating macro: [error details]",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/macro-delete": {
+			"delete": {
+				"summary": "Delete a macro",
+				"description": "Deletes an existing automation macro",
+				"tags": ["Macro"],
+				"parameters": [
+					{
+						"name": "body",
+						"in": "body",
+						"required": true,
+						"description": "Macro to delete",
+						"schema": {
+							"type": "object",
+							"required": ["userId", "macroId"],
+							"properties": {
+								"userId": {
+									"type": "string",
+									"description": "User ID"
+								},
+								"macroId": {
+									"type": "string",
+									"description": "Macro ID to delete"
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Macro deleted successfully",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"macroId": {
+											"type": "string",
+											"description": "ID of the deleted macro"
+										}
+									}
+								},
+								"message": {
+									"type": "string",
+									"example": "OK",
+									"description": "Success message"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Bad Request",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Missing required fields",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Method not allowed",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Method Not Allowed",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Invalid HTTP method. Only DELETE is allowed.",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Server error",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Internal Server Error",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Error deleting macro: [error details]",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/macro-get": {
+			"get": {
+				"summary": "Get a specific macro",
+				"description": "Retrieves a specific macro by name",
+				"tags": ["Macro"],
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "query",
+						"required": true,
+						"type": "string",
+						"description": "User ID"
+					},
+					{
+						"name": "name",
+						"in": "query",
+						"required": true,
+						"type": "string",
+						"description": "Macro name"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Macro retrieved successfully",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"macro": {
+											"type": "object",
+											"properties": {
+												"id": {
+													"type": "string",
+													"description": "Unique identifier for the macro"
+												},
+												"data": {
+													"type": "object",
+													"properties": {
+														"name": {
+															"type": "string",
+															"description": "Name of the macro"
+														},
+														"labels": {
+															"type": "array",
+															"items": {
+																"type": "object",
+																"properties": {
+																	"id": {
+																		"type": "string",
+																		"description": "Gmail label ID"
+																	},
+																	"name": {
+																		"type": "string",
+																		"description": "Gmail label name"
+																	}
+																}
+															},
+															"description": "Gmail labels that trigger this macro"
+														},
+														"action": {
+															"type": "object",
+															"properties": {
+																"type": {
+																	"type": "string",
+																	"description": "Action type to perform on matching emails",
+																	"enum": ["attachment", "content", "summary", "dates"]
+																},
+																"service": {
+																	"type": "string",
+																	"description": "Service handling the action",
+																	"enum": ["google-drive", "one-drive"]
+																},
+																"content": {
+																	"type": "array",
+																	"items": {
+																		"type": "object"
+																	},
+																	"description": "Content configuration for the action"
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								},
+								"message": {
+									"type": "string",
+									"example": "OK",
+									"description": "Success message"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Bad Request",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Missing userId or name in query",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Macro not found",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Not Found",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Macro data not found",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Method not allowed",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Method Not Allowed",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Invalid HTTP method. Only GET is allowed.",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Server error",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Internal Server Error",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Error getting macro: [error details]",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/macro-get-all": {
+			"get": {
+				"summary": "Get all macros",
+				"description": "Retrieves all macros for a user",
+				"tags": ["Macro"],
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "query",
+						"required": true,
+						"type": "string",
+						"description": "User ID"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Macros retrieved successfully",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"macros": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"id": {
+														"type": "string",
+														"description": "Unique identifier for the macro"
+													},
+													"data": {
+														"type": "object",
+														"properties": {
+															"name": {
+																"type": "string",
+																"description": "Name of the macro"
+															},
+															"labels": {
+																"type": "array",
+																"items": {
+																	"type": "object",
+																	"properties": {
+																		"id": {
+																			"type": "string",
+																			"description": "Gmail label ID"
+																		},
+																		"name": {
+																			"type": "string",
+																			"description": "Gmail label name"
+																		}
+																	}
+																},
+																"description": "Gmail labels that trigger this macro"
+															},
+															"action": {
+																"type": "object",
+																"properties": {
+																	"type": {
+																		"type": "string",
+																		"description": "Action type to perform on matching emails",
+																		"enum": ["attachment", "content", "summary", "dates"]
+																	},
+																	"service": {
+																		"type": "string",
+																		"description": "Service handling the action",
+																		"enum": ["google-drive", "one-drive"]
+																	},
+																	"content": {
+																		"type": "array",
+																		"items": {
+																			"type": "object"
+																		},
+																		"description": "Content configuration for the action"
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								},
+								"message": {
+									"type": "string",
+									"example": "OK",
+									"description": "Success message"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Bad Request",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Missing required field: userId",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Macros not found",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Not Found",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Macros data not found",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Method not allowed",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Method Not Allowed",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Invalid HTTP method. Only GET is allowed.",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Server error",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Internal Server Error",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Error getting all macros: [error details]",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/macro-get-all-filtered": {
+			"get": {
+				"summary": "Get filtered macros",
+				"description": "Retrieves macros filtered by label IDs",
+				"tags": ["Macro"],
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "query",
+						"required": true,
+						"type": "string",
+						"description": "User ID"
+					},
+					{
+						"name": "labelIds",
+						"in": "query",
+						"required": true,
+						"type": "string",
+						"description": "Comma-separated list of label IDs"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Filtered macros retrieved successfully",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"properties": {
+										"macros": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"id": {
+														"type": "string",
+														"description": "Unique identifier for the macro"
+													},
+													"data": {
+														"type": "object",
+														"properties": {
+															"name": {
+																"type": "string",
+																"description": "Name of the macro"
+															},
+															"labels": {
+																"type": "array",
+																"items": {
+																	"type": "object",
+																	"properties": {
+																		"id": {
+																			"type": "string",
+																			"description": "Gmail label ID"
+																		},
+																		"name": {
+																			"type": "string",
+																			"description": "Gmail label name"
+																		}
+																	}
+																},
+																"description": "Gmail labels that trigger this macro"
+															},
+															"action": {
+																"type": "object",
+																"properties": {
+																	"type": {
+																		"type": "string",
+																		"description": "Action type to perform on matching emails",
+																		"enum": ["attachment", "content", "summary", "dates"]
+																	},
+																	"service": {
+																		"type": "string",
+																		"description": "Service handling the action",
+																		"enum": ["google-drive", "one-drive"]
+																	},
+																	"content": {
+																		"type": "array",
+																		"items": {
+																			"type": "object"
+																		},
+																		"description": "Content configuration for the action"
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								},
+								"message": {
+									"type": "string",
+									"example": "OK",
+									"description": "Success message"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad request",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Bad Request",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Missing required field: labelIds",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Filtered macros not found",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Not Found",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Filtered macros data not found",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Method not allowed",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Method Not Allowed",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Invalid HTTP method. Only GET is allowed.",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Server error",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"example": "Internal Server Error",
+									"description": "Error type"
+								},
+								"errorMessage": {
+									"type": "string",
+									"example": "Error getting all filtered macros: [error details]",
+									"description": "Detailed error message"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

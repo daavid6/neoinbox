@@ -1,14 +1,20 @@
 import express from 'express';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
+import { createRequire } from 'module';
 import * as handlers from './index.js';
 import { ReasonPhrases } from 'http-status-codes';
 
 const app = express();
 export const expressApp = app;
 
+const require = createRequire(import.meta.url);
+const swaggerDocument = require('./swagger.json');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Health check endpoint
 app.get('/', (_req, res) => {
