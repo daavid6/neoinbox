@@ -246,9 +246,9 @@ export const authToken = async (req, res) => {
 	const { code } = req.body;
 
 	try {
-		const { tokens, userId } = await validateCode(code);
+		const { tokens, userId, jwtToken } = await validateCode(code);
 		res.status(StatusCodes.OK).send({
-			data: { tokens, userId },
+			data: { tokens, userId, jwtToken },
 			message: ReasonPhrases.OK,
 		});
 	} catch (error) {

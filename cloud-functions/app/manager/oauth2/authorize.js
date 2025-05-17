@@ -1,6 +1,7 @@
 import { google } from 'googleapis';
 import { Timestamp } from 'firebase-admin/firestore';
 import { createRequire } from 'module';
+import jwt from 'jsonwebtoken';
 
 import { createDocument, updateDocument, readDocument, existsDoc } from '../firestore/crud.js';
 import { firebaseAuth } from '../firestore/firebase.js';
@@ -11,6 +12,7 @@ import {
 	DocumentNotFound,
 } from '../errors/errors.js';
 import { logger } from '../errors/logger.js';
+import { environment } from '../../private/enviroment.js';
 
 const require = createRequire(import.meta.url);
 const basicUserOAuthCredentials = require('../../private/service_accounts/basic-user-oAuthClient.json');
@@ -83,7 +85,7 @@ export async function getOAuthClientOf(userId) {
  * retrieves user data using the token, and saves the user data to Firestore.
  *
  * @param {string} code - The authorization code to validate.
- * @returns {Promise<Object>} - A promise that resolves to an object containing the token and userId.
+ * @returns {Promise<object>} - A promise that resolves to an object containing the token and userId.
  * @throws {RequiredVariableError} - If the code parameter is missing.
  * @throws {TokenError} - If the token exchange fails or no token is received.
  * @throws {ReferenceError} - If no refresh token is received or if user data retrieval fails.
@@ -115,7 +117,14 @@ export async function validateCode(code) {
 		// Save new refresh token to Firestore and create user if not exists
 		await updateOrCreateFirestoreUser(firebaseUserRecord.uid, tokens.refresh_token);
 
-		return { tokens, userId: firebaseUserRecord.uid };
+		// Create JWT token for the user
+		const jwtToken = jwt.sign(
+			{ userId: firebaseUserRecord.uid, email: googleUserInfo.email },
+			environment.jwtKey,
+			{ expiresIn: '24h' }
+		);
+
+		return { tokens, userId: firebaseUserRecord.uid, jwtToken };
 	} catch (error) {
 		logger.error(`Failed to validate the code: ${code}:`, error);
 		throw error;
