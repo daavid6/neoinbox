@@ -5,6 +5,7 @@ import { BehaviorSubject, firstValueFrom } from 'rxjs';
 
 import { Tokens } from '../interfaces/Tokens';
 import { ENDPOINTS } from '../enums/EndPoints';
+import { AuthResponse } from '../interfaces/AuthResponse';
 
 @Injectable({
 	providedIn: 'root',
@@ -15,6 +16,7 @@ export class AuthService {
 
 	private userId: string | null = null;
 	private isloggedIn: boolean = false;
+	private jwtToken: string | null = null;
 
 	constructor(private http: HttpClient) {}
 
@@ -61,19 +63,38 @@ export class AuthService {
 	 * @param code - Authorization code from Google
 	 * @returns Tokens and user ID
 	 */
-	public async validateCode(code: string): Promise<{ tokens: Tokens; userId: string }> {
+	public async validateCode(code: string): Promise<AuthResponse> {
 		try {
 			const response = await firstValueFrom(
-				this.http.post<{ data: { tokens: Tokens; userId: string }; message: string }>(
+				this.http.post<{ data: AuthResponse; message: string }>(
 					ENDPOINTS.validateCode,
 					{ code },
 				),
 			);
-			return response.data;
+
+			this.setJwtToken(response.data.jwtToken);
+      		return response.data;
 		} catch (error) {
 			console.error('Error exchanging code for tokens:', error);
 			throw error;
 		}
+	}
+
+	/**
+	 * Sets JWT token in memory and localStorage
+	 * @param token - JWT token to store
+	 */
+	public setJwtToken(token: string): void {
+		this.jwtToken = token;
+		localStorage.setItem('jwtToken', token);
+	}
+
+	/**
+	 * Gets JWT token from memory
+	 * @returns JWT token or null
+	 */
+	public getJwtToken(): string | null {
+		return this.jwtToken || localStorage.getItem('jwtToken');
 	}
 
 	// ---- Data Management Methods ----
@@ -102,11 +123,13 @@ export class AuthService {
 		localStorage.removeItem('userId');
 		localStorage.removeItem('refreshToken');
 		localStorage.removeItem('isLoggedIn');
+		localStorage.removeItem('jwtToken');
 
 		// Clear memory
 		this.accessToken$.next(null);
 		this.userId = null;
 		this.isloggedIn = false;
+		this.jwtToken = null;
 	}
 
 	/**
@@ -132,8 +155,9 @@ export class AuthService {
 	public restoreAuthState(): void {
 		const accessToken = localStorage.getItem('accessToken');
 		const userId = localStorage.getItem('userId');
+		const jwtToken = localStorage.getItem('jwtToken');
 
-		if (!accessToken || !userId) return;
+		if (!accessToken || !userId || !jwtToken) return;
 
 		if (this.isTokenExpired()) {
 			try {
@@ -145,6 +169,7 @@ export class AuthService {
 			this.accessToken$.next(accessToken);
 			this.userId = userId;
 			this.isloggedIn = true;
+			this.jwtToken = jwtToken;
 		}
 	}
 
@@ -169,7 +194,7 @@ export class AuthService {
 
 		// return firstValueFrom(
 		// 	this.http.post<{ data: { tokens: Tokens }; message: string }>(
-		// 		ENDPOINTS.refreshToken, // You'll need to add this endpoint to your backend
+		// 		ENDPOINTS.refreshToken,
 		// 		{ refresh_token: refreshToken },
 		// 	),
 		// ).then((response) => {
