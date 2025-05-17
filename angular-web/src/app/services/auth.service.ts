@@ -14,7 +14,7 @@ export class AuthService {
 	// Observable for access token changes
 	public accessToken$ = new BehaviorSubject<string | null>(null);
 
-	private userId: string | null = null;
+	private userId: string = '';
 	private isloggedIn: boolean = false;
 	private jwtToken: string | null = null;
 
@@ -127,7 +127,7 @@ export class AuthService {
 
 		// Clear memory
 		this.accessToken$.next(null);
-		this.userId = null;
+		this.userId = '';
 		this.isloggedIn = false;
 		this.jwtToken = null;
 	}
@@ -143,9 +143,9 @@ export class AuthService {
 
 	/**
 	 * Gets current user ID
-	 * @returns User ID or null
+	 * @returns User ID or empty string ''
 	 */
-	public getUserId(): string | null {
+	public getUserId(): string {
 		return this.userId;
 	}
 

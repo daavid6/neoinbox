@@ -47,9 +47,6 @@ const DEFAULT_MACROS_PER_PAGE = 4;
 	styleUrl: './watch-control.component.css',
 })
 export class WatchControlComponent implements OnInit {
-	// ---- Authentication state ----
-	private userId: string = '';
-
 	// ---- Watch status state ----
 	protected isWatchEnabled: boolean = false;
 	protected isWaitingResponse: boolean = false;
@@ -78,11 +75,6 @@ export class WatchControlComponent implements OnInit {
 	) {}
 
 	async ngOnInit() {
-		if (!this.checkAuthentication()) {
-			this.router.navigate(['/authenticate']);
-			return;
-		}
-
 		try {
 			await Promise.all([this.initializeWatchStatus(), this.loadMacroData()]);
 		} catch (error) {
@@ -93,30 +85,18 @@ export class WatchControlComponent implements OnInit {
 	// ---- Initializer methods ----
 
 	/**
-	 * Check if user is authenticated, redirect if not
-	 * @returns false if not logged-in or user id is not set
-	 */
-	private checkAuthentication(): boolean {
-		this.userId = this.authService.getUserId() || '';
-		return this.authService.isLoggedIn() && !!this.userId;
-	}
-
-	/**
 	 * Check if watch is enabled for the current user
 	 */
 	private async initializeWatchStatus(): Promise<void> {
-		if (!this.userId) return;
-		this.isWatchEnabled = await this.watchGmailService.isWatchEnabled(this.userId);
+		this.isWatchEnabled = await this.watchGmailService.isWatchEnabled(this.authService.getUserId());
 	}
 
 	/**
 	 * Load and process macro data
 	 */
 	private async loadMacroData(): Promise<void> {
-		if (!this.userId) return;
-
 		// Fetch macro data
-		this.currentMacros = (await this.macroService.getAllMacros(this.userId)) ?? [];
+		this.currentMacros = (await this.macroService.getAllMacros(this.authService.getUserId())) ?? [];
 
 		// Process data for display
 		this.parsedMacros = this.currentMacros.map((macro: Macro) => ({
@@ -226,7 +206,7 @@ export class WatchControlComponent implements OnInit {
 	protected async deleteMacro(macroId: string): Promise<void> {
 		try {
 			// Wait for the deletion to complete
-			await this.macroService.deleteMacro(this.userId, macroId);
+			await this.macroService.deleteMacro(this.authService.getUserId(), macroId);
 
 			// Update the local arrays directly before refreshing
 			this.currentMacros = this.currentMacros.filter((macro) => macro.id !== macroId);

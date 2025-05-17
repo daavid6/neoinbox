@@ -31,11 +31,12 @@ export class AuthenticateComponent {
 			const code = await this.authService.initiateGoogleAuth();
 
 			// Validate the code, uptade or create user data and get the user ID and tokens
-			const { userId, tokens } = await this.authService.validateCode(code);
+			const { userId, tokens, jwtToken } = await this.authService.validateCode(code);
 
 			// Set tokens for the current session
 			this.authService.setUserId(userId);
 			this.authService.setTokens(tokens);
+			this.authService.setJwtToken(jwtToken);
 
 			// Start navigation immediately
 			this.router.navigate(['/watch-control']);
