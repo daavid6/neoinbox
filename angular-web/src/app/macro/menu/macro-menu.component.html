@@ -47,14 +47,14 @@
 				<mat-card-header>
 					<mat-card-title><h2>Macros</h2></mat-card-title>
 
-					<button mat-icon-button (click)="createMacro()" color="primary">
+					<button mat-icon-button (click)="createMacro()" data-test="create-macro-button" color="primary">
 						<mat-icon>add</mat-icon>
 					</button>
 				</mat-card-header>
 
 				<mat-card-content class="macros-preview-content">
 					<div class="table-container">
-						<table mat-table class="table" [dataSource]="dataSource">
+						<table mat-table class="table" [dataSource]="dataSource" data-test="macro-list">
 							<!-- Name Column -->
 							<ng-container matColumnDef="name">
 								<th mat-header-cell *matHeaderCellDef>Name</th>
@@ -86,6 +86,7 @@
 										<button
 											mat-icon-button
 											color="primary"
+											data-test="edit-macro"
 											aria-label="Edit macro"
 											(click)="editMacro(element.id)"
 										>
@@ -94,6 +95,7 @@
 										<button
 											mat-icon-button
 											color="warn"
+											data-test="delete-macro"
 											aria-label="Delete macro"
 											(click)="deleteMacro(element.id)"
 										>
@@ -107,7 +109,7 @@
 								mat-header-row
 								*matHeaderRowDef="displayedColumns; sticky: true"
 							></tr>
-							<tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+							<tr mat-row data-test="macro-item" *matRowDef="let row; columns: displayedColumns"></tr>
 						</table>
 					</div>
 

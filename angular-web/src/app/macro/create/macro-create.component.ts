@@ -27,7 +27,7 @@ import { map } from 'rxjs/operators';
 import { WatchGmailService } from '../../services/watch-gmail.service';
 import { DriveService } from '../../services/drive.service';
 import { ACTION, ATTACHMENT } from '../../interfaces/Macro';
-import { NameId } from '../../interfaces/Other';
+import { NameId } from '../../interfaces/NameId';
 import { AuthService } from '../../services/auth.service';
 import { MacroService } from '../../services/macro.service';
 
@@ -89,11 +89,7 @@ export class MacroCreateComponent {
 		const value = this.typedValue().toLowerCase().trim();
 
 		return this.allLabels()
-			.filter(
-				(label) =>
-					!this.selectedLabels().includes(label) &&
-					label.name.toLowerCase().includes(value),
-			)
+			.filter((label) => !this.selectedLabels().includes(label) && label.name.toLowerCase().includes(value))
 			.map((label) => label.name);
 	});
 	protected allLabels = signal<ReducedLabel[]>([]);
@@ -143,11 +139,9 @@ export class MacroCreateComponent {
 		private breakpointObserver: BreakpointObserver,
 		private announcer: LiveAnnouncer,
 		protected driveService: DriveService,
-		private router: Router,
+		private router: Router
 	) {
-		this.stepperOrientation = this.breakpointObserver
-			.observe('(min-width: 800px)')
-			.pipe(map(({ matches }) => (matches ? 'horizontal' : 'vertical')));
+		this.stepperOrientation = this.breakpointObserver.observe('(min-width: 800px)').pipe(map(({ matches }) => (matches ? 'horizontal' : 'vertical')));
 	}
 
 	// Selectors
@@ -166,7 +160,7 @@ export class MacroCreateComponent {
 		const labelName = (event.value || '').trim();
 
 		const label: ReducedLabel | undefined = this.allLabels().find(
-			(label) => label.name.trim() == labelName,
+			(label) => label.name.trim() == labelName
 		);
 
 		if (!label || !this.addKeyword(label)) return;
@@ -175,15 +169,12 @@ export class MacroCreateComponent {
 		event.chipInput!.clear();
 	}
 
-	protected addKeywordFromOption(
-		event: MatOptionSelectionChange,
-		labelInput: HTMLInputElement,
-	): void {
+	protected addKeywordFromOption(event: MatOptionSelectionChange, labelInput: HTMLInputElement): void {
 		if (!event.isUserInput) return;
 
 		const labelName = (event.source.value || '').trim();
 		const label: ReducedLabel | undefined = this.allLabels().find(
-			(label) => label.name.trim() == labelName,
+			(label) => label.name.trim() == labelName
 		);
 
 		if (!label || !this.addKeyword(label)) return;
@@ -196,8 +187,7 @@ export class MacroCreateComponent {
 	}
 
 	private addKeyword(label: ReducedLabel): boolean {
-		if (!this.allLabels().includes(label) || this.selectedLabels().includes(label))
-			return false;
+		if (!this.allLabels().includes(label) || this.selectedLabels().some(selectedLabel => selectedLabel.id === label.id)) return false;
 
 		this.selectedLabels.update((labels) => [...labels, label]);
 		return true;
@@ -229,7 +219,7 @@ export class MacroCreateComponent {
 		this.router.navigate(['/macro-menu']);
 	}
 
-	//Dates permissions
+	//Increment permissions
 	protected async incrementCalendarPermissions() {
 		await this.authService.incrementCalendarPermissions();
 	}

@@ -1,7 +1,7 @@
 import { EventEmitter, Injectable } from '@angular/core';
 
 import { environment } from '../private/enviroments/enviroment';
-import { NameId } from '../interfaces/Other';
+import { NameId } from '../interfaces/NameId';
 import { ACTION } from '../interfaces/Macro';
 import { AuthService } from './auth.service';
 import { Tokens } from '../interfaces/Tokens';

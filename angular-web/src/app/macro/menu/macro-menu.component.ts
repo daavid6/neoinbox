@@ -68,7 +68,7 @@ export class MacroMenuComponent implements OnInit {
 		private macroService: MacroService,
 	) {}
 
-	async ngOnInit() {
+	public async ngOnInit() {
 		try {
 			await this.loadMacroData();
 		} catch (error) {

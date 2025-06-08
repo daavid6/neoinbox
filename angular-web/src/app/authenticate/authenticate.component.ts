@@ -46,11 +46,11 @@ export class AuthenticateComponent {
 		}
 	}
 
-	protected logIn() {
-		return this.authenticate();
+	protected async logIn() {
+		await this.authenticate();
 	}
 
-	protected signUp() {
-		return this.authenticate();
+	protected async signUp() {
+		await this.authenticate();
 	}
 }

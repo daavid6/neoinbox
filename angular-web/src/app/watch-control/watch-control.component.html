@@ -7,15 +7,15 @@
 
 	<span class="spacer"></span>
 
-	<button mat-icon-button [matMenuTriggerFor]="userMenu">
+	<button mat-icon-button [matMenuTriggerFor]="userMenu" data-test="user-menu">
 		<mat-icon>account_circle</mat-icon>
 	</button>
 
-	<mat-menu #userMenu="matMenu">
-		<button mat-menu-item>Profile</button>
-		<button mat-menu-item>Settings</button>
+	<mat-menu #userMenu="matMenu" data-test="mat-user-menu">
+		<button mat-menu-item data-test="profile-button">Profile</button>
+		<button mat-menu-item data-test="settings-button">Settings</button>
 		<mat-divider></mat-divider>
-		<button mat-menu-item (click)="signOut()">Sign out</button>
+		<button mat-menu-item (click)="signOut()" data-test="signout-button">Sign out</button>
 	</mat-menu>
 </mat-toolbar>
 
@@ -49,6 +49,7 @@
 					<mat-card-title><h2>Service Status</h2></mat-card-title>
 					<div
 						class="status-circle"
+						data-test="status-circle"
 						[ngClass]="{
 							active: isWatchEnabled && !isWaitingResponse,
 							inactive: !isWatchEnabled && !isWaitingResponse,
@@ -60,6 +61,7 @@
 				<mat-card-content>
 					<mat-slide-toggle
 						class="watch-toggle"
+						data-test="watch-toggle"
 						[checked]="isWatchEnabled"
 						(change)="toggleWatch($event.checked)"
 						[disabled]="isWaitingResponse"
@@ -86,10 +88,10 @@
 
 				<mat-card-content>
 					<div class="action-buttons">
-						<button routerLink="/macro-menu" class="custom-button">
+						<button routerLink="/macro-menu" class="custom-button" data-test="goto-macro-menu">
 							<mat-icon>list</mat-icon> View Macros
 						</button>
-						<button routerLink="/macro-create" class="custom-button">
+						<button routerLink="/macro-create" class="custom-button" data-test="goto-macro-create">
 							<mat-icon>add</mat-icon> Create New Macro
 						</button>
 					</div>
@@ -108,7 +110,7 @@
 
 				<mat-card-content class="macros-preview-content">
 					<div class="table-container">
-						<table mat-table class="table" [dataSource]="dataSource">
+						<table mat-table class="table" [dataSource]="dataSource" data-test="macro-list">
 							<!-- Name Column -->
 							<ng-container matColumnDef="name">
 								<th mat-header-cell *matHeaderCellDef>Name</th>
@@ -140,6 +142,7 @@
 										<button
 											mat-icon-button
 											color="primary"
+											data-test="edit-macro"
 											aria-label="Edit macro"
 											(click)="editMacro(element.id)"
 										>
@@ -148,6 +151,7 @@
 										<button
 											mat-icon-button
 											color="warn"
+											data-test="delete-macro"
 											aria-label="Delete macro"
 											(click)="deleteMacro(element.id)"
 										>
@@ -161,7 +165,7 @@
 								mat-header-row
 								*matHeaderRowDef="displayedColumns; sticky: true"
 							></tr>
-							<tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+							<tr mat-row data-test="macro-item" *matRowDef="let row; columns: displayedColumns"></tr>
 						</table>
 					</div>
 

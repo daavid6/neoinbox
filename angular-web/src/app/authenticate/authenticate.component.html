@@ -1,7 +1,7 @@
 <mat-toolbar class="top-toolbar">
 	<span class="logo"><h1>NeoInbox</h1></span>
 	<span class="spacer"></span>
-	<button routerLink="/pricing">Pricing</button>
+	<button routerLink="/pricing" data-test="pricing-button">Pricing</button>
 	<button>FAQ</button>
 </mat-toolbar>
 
@@ -14,11 +14,11 @@
 			on what truly matters.
 		</h3>
 		<div class="auth-buttons-container">
-			<button (click)="logIn()">Log In</button>
-			<button (click)="signUp()">Sign up</button>
+			<button (click)="logIn()" data-test="login-button">Log in</button>
+			<button (click)="signUp()" data-test="signup-button">Sign up</button>
 		</div>
 	</div>
 	<div class="content-right">
-		<img class="feature-image" src="sobre.webp" alt="Illustration" />
+		<img class="feature-image" data-test="image" src="sobre.webp" alt="Illustration" />
 	</div>
 </div>

@@ -1,8 +1,8 @@
 <mat-toolbar class="top-toolbar">
-	<span class="logo" routerLink="/authenticate"><h1>NeoInbox</h1></span>
+	<span class="logo" data-test="header-logo" routerLink="/authenticate"><h1>NeoInbox</h1></span>
 	<span class="spacer"></span>
-	<button mat-button routerLink="/authenticate">Home</button>
-	<button mat-button>FAQ</button>
+	<button mat-button data-test="header-home-button" routerLink="/authenticate">Home</button>
+	<button mat-button data-test="header-faq-button">FAQ</button>
 </mat-toolbar>
 
 <div class="page-container">
@@ -12,10 +12,10 @@
 	</div>
 
 	<section class="pricing-tiers">
-		<div class="tier-card basic">
+		<div data-test="basic-tier-section" class="tier-card basic">
 			<div class="card-content">
 				<div class="tier-header">
-					<h3>Basic</h3>
+					<h3 data-test="basic-tier-section-title">Basic</h3>
 					<div class="price">
 						<span class="amount">$0</span>
 						<span class="period">/mo</span>
@@ -37,15 +37,15 @@
 					</ul>
 				</div>
 
-				<button class="cta-button basic">Get Started</button>
+				<button class="cta-button basic" data-test="basic-tier-section-button">Get Started</button>
 			</div>
 		</div>
 
-		<div class="tier-card premium featured">
+		<div class="tier-card premium featured" data-test="premium-tier-section">
 			<div class="popular-tag">Most Popular</div>
 			<div class="card-content">
 				<div class="tier-header">
-					<h3>Premium</h3>
+					<h3 data-test="premium-tier-section-title">Premium</h3>
 					<div class="price">
 						<span class="amount">$12</span>
 						<span class="period">/mo</span>
@@ -64,14 +64,14 @@
 					</ul>
 				</div>
 
-				<button class="cta-button premium">Start Free Trial</button>
+				<button class="cta-button premium" data-test="premium-tier-section-button">Start Free Trial</button>
 			</div>
 		</div>
 
-		<div class="tier-card enterprise">
+		<div class="tier-card enterprise" data-test="enterprise-tier-section">
 			<div class="card-content">
 				<div class="tier-header">
-					<h3>Enterprise</h3>
+					<h3 data-test="enterprise-tier-section-title">Enterprise</h3>
 					<div class="price">
 						<span class="amount">$**</span>
 						<span class="period">/mo</span>
@@ -89,16 +89,16 @@
 					</ul>
 				</div>
 
-				<button class="cta-button enterprise">Contact Sales</button>
+				<button class="cta-button enterprise" data-test="enterprise-tier-section-button">Contact Sales</button>
 			</div>
 		</div>
 	</section>
 
-	<section class="contact-section">
+	<section class="contact-section" data-test="contact-section">
 		<div class="contact-content">
-			<h3>Need help choosing the right plan?</h3>
+			<h3 data-test="contact-section-title">Need help choosing the right plan?</h3>
 			<p>Our team is ready to answer any questions you might have.</p>
-			<button class="cta-button contact">Contact Us</button>
+			<button class="cta-button contact" data-test="contact-section-button">Contact Us</button>
 		</div>
 	</section>
 </div>

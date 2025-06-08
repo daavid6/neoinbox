@@ -1,10 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
-import { Macro } from '../interfaces/Macro';
-import { NameId } from '../interfaces/Other';
-import { ACTION } from '../interfaces/Macro';
+
 import { ENDPOINTS } from '../enums/EndPoints';
+import { ACTION, Macro } from '../interfaces/Macro';
+import { NameId } from '../interfaces/NameId';
 
 type ReducedLabel = NameId;
 
@@ -19,8 +20,8 @@ export class MacroService {
 
 		const response = await firstValueFrom(
 			this.http.get<{ data: { macros: Macro[] }; message: string }>(
-				`${ENDPOINTS.getAllMacros}?userId=${userId}`,
-			),
+				`${ENDPOINTS.getAllMacros}?userId=${userId}`
+			)
 		);
 
 		return response.data.macros;
@@ -32,7 +33,7 @@ export class MacroService {
 		labels: ReducedLabel[],
 		actionType: ACTION,
 		service: string,
-		remainder: object | undefined,
+		remainder: object | undefined
 	): Promise<void> {
 		await firstValueFrom(
 			this.http.post<string>(ENDPOINTS.createMacro, {
@@ -42,7 +43,7 @@ export class MacroService {
 				actionType,
 				service,
 				remainder,
-			}),
+			})
 		);
 	}
 
@@ -50,7 +51,7 @@ export class MacroService {
 		if (!userId || !macroId) return;
 
 		await firstValueFrom(
-			this.http.delete(ENDPOINTS.deleteMacro, { body: { userId, macroId } }),
+			this.http.delete(ENDPOINTS.deleteMacro, { body: { userId, macroId } })
 		);
 	}
 }

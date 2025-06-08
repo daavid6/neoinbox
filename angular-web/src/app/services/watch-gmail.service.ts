@@ -15,23 +15,55 @@ declare const gapi: any;
 })
 export class WatchGmailService {
 	private isGapiInitialized: boolean = false;
+	private initializationPromise: Promise<void> | null = null;
 
 	constructor(
 		private authService: AuthService,
-		private http: HttpClient,
+		private http: HttpClient
 	) {
 		this.authService.accessToken$.subscribe((token) => {
-			if (token && !this.isGapiInitialized) {
+			if (token) {
 				this.initializeGapiClient(token);
 			}
 		});
 	}
 
-	public async watchGmail() {
-		if (!this.isGapiInitialized) {
-			console.error('GAPI client not initialized');
-			throw new Error('GAPI client not initialized');
+	private initializeGapiClient(token: string): Promise<void> {
+		if (this.initializationPromise) {
+			return this.initializationPromise;
 		}
+
+		this.initializationPromise = new Promise<void>((resolve, reject) => {
+			gapi.load('client', async () => {
+				try {
+					await gapi.client.init({
+						apiKey: environment.gmailApiKey,
+						discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest'],
+					});
+					gapi.client.setToken({ access_token: token });
+					this.isGapiInitialized = true;
+					resolve();
+				} catch (error) {
+					console.error('Failed to initialize GAPI client:', error);
+					reject(error);
+				}
+			});
+		});
+
+		return this.initializationPromise;
+	}
+
+	private async ensureInitialized(): Promise<void> {
+		if (!this.isGapiInitialized) {
+			if (!this.initializationPromise) {
+				throw new Error('GAPI client not initialized and no initialization in progress');
+			}
+			await this.initializationPromise;
+		}
+	}
+
+	public async watchGmail() {
+    	await this.ensureInitialized();
 
 		const res = await gapi.client.gmail.users.watch({
 			userId: 'me',
@@ -48,10 +80,7 @@ export class WatchGmailService {
 	}
 
 	public async unWatchGmail() {
-		if (!this.isGapiInitialized) {
-			console.error('GAPI client not initialized');
-			throw new Error('GAPI client not initialized');
-		}
+    	await this.ensureInitialized();
 
 		const res = await gapi.client.gmail.users.stop({
 			userId: 'me',
@@ -66,20 +95,12 @@ export class WatchGmailService {
 	}
 
 	public async isWatchEnabled(userId: string): Promise<boolean> {
-		const res = await firstValueFrom(
-			this.http.get<{ data: boolean; message: string }>(
-				`${ENDPOINTS.getWatchStatus}?userId=${userId}`,
-			),
-		);
+		const res = await firstValueFrom(this.http.get<{ data: boolean; message: string }>(`${ENDPOINTS.getWatchStatus}?userId=${userId}`));
 
 		return res.data;
 	}
 
-	private async updateWatchData(
-		historyId: string,
-		expiration: number,
-		beingEnable: boolean,
-	): Promise<string> {
+	private async updateWatchData(historyId: string, expiration: number, beingEnable: boolean): Promise<string> {
 		const userId = this.authService.getUserId();
 
 		if (!userId) throw new Error('User not authenticated');
@@ -92,35 +113,21 @@ export class WatchGmailService {
 					historyId: String(historyId),
 					expiration,
 					userId,
-				}),
+				})
 			);
 		} else {
 			await firstValueFrom(
 				this.http.post(ENDPOINTS.disableWatch, {
 					userId,
-				}),
+				})
 			);
 		}
 
 		return oldHistoryId;
 	}
 
-	private initializeGapiClient(token: string) {
-		gapi.load('client', async () => {
-			await gapi.client.init({
-				apiKey: environment.gmailApiKey,
-				discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest'],
-			});
-			gapi.client.setToken({ access_token: token });
-			this.isGapiInitialized = true;
-		});
-	}
-
 	public async getLabels(): Promise<Label[] | null> {
-		if (!this.isGapiInitialized) {
-			console.error('GAPI client not initialized');
-			throw new Error('GAPI client not initialized');
-		}
+    	await this.ensureInitialized();
 
 		let labels: Label[];
 
@@ -136,7 +143,6 @@ export class WatchGmailService {
 		}
 
 		if (!labels || labels.length == 0) return null;
-
 		return labels;
 	}
 }

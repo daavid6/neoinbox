@@ -1,25 +1,23 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
 import { NgClass } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
-
-import { MatIconModule } from '@angular/material/icon';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatListModule } from '@angular/material/list';
-import { MatCardModule } from '@angular/material/card';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-
-import { MacroService } from '../services/macro.service';
-import { WatchGmailService } from '../services/watch-gmail.service';
-import { AuthService } from '../services/auth.service';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { Router, RouterLink } from '@angular/router';
 
 import { Macro } from '../interfaces/Macro';
+import { AuthService } from '../services/auth.service';
+import { MacroService } from '../services/macro.service';
+import { WatchGmailService } from '../services/watch-gmail.service';
 
 // Constants
 const DEFAULT_MACROS_PER_PAGE = 4;
