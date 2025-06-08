@@ -1,0 +1,11 @@
+{
+	"data": {
+		"tokens": {
+			"access_token": "fake-access-token",
+			"refresh_token": "fake-refresh-token"
+		},
+		"userId": "test-user-123",
+		"jwtToken": "fake-jwt-token"
+	},
+	"message": "OK"
+}

@@ -1,0 +1,25 @@
+{
+    "data": {
+        "macros": [
+            {
+                "id": "macro-123",
+                "data": {
+                    "name": "My E2E Test Macro",
+                    "action": {
+                        "content": [
+                            { "id": "folder-123", "name": "My Test Folder" },
+                            { "id": "folder-456", "name": "Another Folder" }
+                        ],
+                        "type": "attachment",
+                        "service": "google-drive"
+                    },
+                    "labels": [
+                        { "name": "INBOX", "id": "INBOX" },
+                        { "name": "SENT", "id": "SENT" }
+                    ]
+                }
+            }
+        ]
+    },
+    "message": "OK"
+}
