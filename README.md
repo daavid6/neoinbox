@@ -70,6 +70,12 @@ npm run start
 cd angular-web
 ng serve
 
+# --- cloud functions ---
+
+npx jest ./*
+
+
+# --- angular web ---
 
 # Run Unitary tests (with coverage checking)
 ng test --code-coverage
