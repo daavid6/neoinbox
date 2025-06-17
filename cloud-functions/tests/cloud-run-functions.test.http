@@ -60,7 +60,8 @@ Content-Type: application/json
 {
 	"scopes": [
 		"https://www.googleapis.com/auth/calendar.events.freebusy",
-		"https://www.googleapis.com/auth/calendar.calendarlist.readonly"
+		"https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+		"https://www.googleapis.com/auth/gmail.label"
 	]
 }
 

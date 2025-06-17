@@ -31,6 +31,7 @@ export class AuthService {
 			scopes: [
 				'https://www.googleapis.com/auth/gmail.readonly',
 				'https://www.googleapis.com/auth/userinfo.email',
+				'https://www.googleapis.com/auth/gmail.labels'
 			],
 		});
 	}
@@ -54,6 +55,7 @@ export class AuthService {
 			scopes: [
 				'https://www.googleapis.com/auth/calendar.calendarlist.readonly',
 				'https://www.googleapis.com/auth/calendar.events.freebusy',
+				'https://www.googleapis.com/auth/gmail.modify'
 			],
 		});
 	}

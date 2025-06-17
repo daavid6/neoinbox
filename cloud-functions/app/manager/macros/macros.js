@@ -42,7 +42,7 @@ export async function deleteMacro(userId, macroId) {
 	const macroRef = db.collection('users').doc(userId).collection('macros').doc(macroId);
 
 	try {
-		db.recursiveDelete(macroRef);
+		await db.recursiveDelete(macroRef);
 	} catch (error) {
 		logger.error('Error deleting macro: ', error);
 		throw new UnexpectedError(`Error deleting macro: ${error.message}`);

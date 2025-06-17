@@ -221,7 +221,9 @@ export class MacroCreateComponent {
 
 	//Increment permissions
 	protected async incrementCalendarPermissions() {
-		await this.authService.incrementCalendarPermissions();
+		const code = await this.authService.incrementCalendarPermissions();
+		const { tokens } = await this.authService.validateCode(code);
+		this.authService.setTokens(tokens);
 	}
 
 	/**
